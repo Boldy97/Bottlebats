@@ -254,7 +254,7 @@ function mediumBot(data){
 function hardBot(state){
 	state = formatState(state);
 	for(let planet of state.planets)
-		hardBot_getFutureState(planet,100);
+		getFutureState(planet,100);
 	// TODO edit so it takes all ongoing moves into consideration
 	/*if(planets[0].length !== 0)
 		return hardBot_expansionPhase(state);*/
