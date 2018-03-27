@@ -132,7 +132,7 @@ function getFutureState(planet,turns){
 		return planet.future[turns];
 	// Recursive call
 	if(turns > planet.future.length)
-		hardBot_getFutureState(planet,turns-1);
+		getFutureState(planet,turns-1);
 	// Make new state
 	let state = {
 		ships: planet.future[planet.future.length-1].ships+1,
