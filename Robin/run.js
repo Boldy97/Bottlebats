@@ -263,5 +263,5 @@ function hardBot(state){
 
 
 function hardBot_expansionPhase(state){
-	
+			
 }
