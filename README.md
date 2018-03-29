@@ -2,17 +2,26 @@
 
 ## Usage
 
-### Brent
+1. Add your bot in a folder with your github name
+2. Edit the readme with instructions how to add your bot to the program
+
+### Boldy97 (Robin)
+
+1. Install node and npm
+2. run `npm install` in the `/Boldy97/` directory
+3. Add a bot using `node {path}/Robin/run.js {Bot}` where `{path}` is the path of the git repository and `{Bot}` is one of the following:
+   * BotSimple
+   * BotMedium
+   * BotHard (in progress)
+
+### QuintenDV (Quinten)
 
 ???
 
-### Quinten
+### SuperMcBrent (Brent)
 
 ???
 
-### Robin
+### ??? (Nikita)
 
-Add a bot using `nodejs {path}/Robin/run.js {botLevel}` where `{path}` is the path of the git repository and `{botLevel}` is one of the following:
-* simpleBot
-* mediumBot
-* hardBot
+???
