@@ -1,6 +1,6 @@
-# 
+# Battlebots
 
-This is a collection of bots for the [Battlebots]() project
+This is a collection of bots for the Battlebots project of [MOZAIC](https://github.com/ZeusWPI/MOZAIC).
 
 ## Links
 
@@ -23,6 +23,10 @@ This is a collection of bots for the [Battlebots]() project
    * BotSimple
    * BotMedium
    * BotHard (in progress)
+
+### joejoepie (Wouter)
+
+???
 
 ### QuintenDV (Quinten)
 
