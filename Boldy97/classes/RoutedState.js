@@ -56,11 +56,11 @@ module.exports = class RoutedState extends State {
 			}*/
 		}
 
-		//this.getSvg(L);
+		this.getSvg(L);
 		/*this.printTable(E);
 		this.printTable(D);
 		this.printTable(L);*/
-		//Utilities.crash();
+		Utilities.crash();
 
 
 

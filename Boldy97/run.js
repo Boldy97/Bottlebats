@@ -35,7 +35,7 @@ let validBots = ['BotSimple','BotMedium','BotHard'];
 					)
 				})
 			);
-			if(true) // Toggle output.json
+			if(false) // Toggle output.json
 				fs.writeSync(fd,state+'\n');
 		}).bind(
 			null,
