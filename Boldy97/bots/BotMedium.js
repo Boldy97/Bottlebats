@@ -1,6 +1,6 @@
 'use strict'
 
-const Utilities = require('./Utilities');
+const Utilities = require('../classes/Utilities');
 
 module.exports = class BotMedium {
 
@@ -16,7 +16,7 @@ module.exports = class BotMedium {
 			for(let planet_enemy of state.planets){
 				if(planet_enemy.owner === 1)
 					continue;
-				let temp_dist = Utilities.getDistanceBetweenPlanets(planet_mine,planet_enemy);
+				let temp_dist = Utilities.getDistance(planet_mine,planet_enemy);
 				if(temp_dist < dist){
 					destination = planet_enemy
 					dist = temp_dist;

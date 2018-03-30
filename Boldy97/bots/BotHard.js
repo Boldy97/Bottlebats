@@ -1,6 +1,6 @@
 'use strict'
 
-const Utilities = require('./Utilities');
+const RoutedState = require('../classes/RoutedState');
 
 module.exports = class BotHard {
 
@@ -17,9 +17,9 @@ module.exports = class BotHard {
 		* send the rest to nearby planets to weaken them
 	*/
 	static getMoves(state){
-		state = Utilities.formatState(state);
+		state = new RoutedState(1,null,state);
 
-		/*console.log(stateToString(state));
+		/*console.log(Utilities.stateToString(state));
 		crash();*/
 
 		/*for(let planet of state.planets)

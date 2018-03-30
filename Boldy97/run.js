@@ -2,13 +2,14 @@
 
 /* Imports */
 
-const Utilities = require('./bots/Utilities');
+const Utilities = require('./classes/Utilities');
 const BotSimple = require('./bots/BotSimple');
 const BotMedium = require('./bots/BotMedium');
 const BotHard = require('./bots/BotHard');
 
 /* Libraries */
 
+const fs = require('fs');
 const readline = require('readline').createInterface({
 	input: process.stdin,
 	output: process.stdout,
@@ -31,7 +32,9 @@ let validBots = ['BotSimple','BotMedium','BotHard'];
 					JSON.parse(state)
 				)
 			})
-		)
+		);
+		if(true) // Toggle output.json
+			fs.appendFileSync('output.json',state);
 	).bind(
 		null,
 		eval(
