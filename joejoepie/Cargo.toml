@@ -1,0 +1,9 @@
+[package]
+name = "wouterbot"
+version = "0.1.0"
+authors = ["Wouter Standaert <wouter_standaert@hotmail.com>"]
+
+[dependencies]
+serde = "1.0.36"
+serde_json = "1.0.13"
+serde_derive = "1.0.36"
