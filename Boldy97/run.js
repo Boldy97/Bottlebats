@@ -10,6 +10,7 @@ const BotHard = require('./bots/BotHard');
 /* Libraries */
 
 const fs = require('fs');
+const fd = fs.openSync('output.json','w');
 const readline = require('readline').createInterface({
 	input: process.stdin,
 	output: process.stdout,
@@ -25,20 +26,20 @@ let validBots = ['BotSimple','BotMedium','BotHard'];
 (() => {
 	if(!validBots.includes(process.argv[2]))
 		Utilities.crash(process.argv[2]+' is not a valid bot!');
-	readline.on('line',((bot,state) => 
-		console.log(
-			JSON.stringify({
-				moves:bot.getMoves(
-					JSON.parse(state)
-				)
-			})
-		);
-		if(true) // Toggle output.json
-			fs.appendFileSync('output.json',state);
-	).bind(
-		null,
-		eval(
-			process.argv[2])
+	readline.on('line',
+		((bot,state) => {
+			console.log(
+				JSON.stringify({
+					moves:bot.getMoves(
+						JSON.parse(state)
+					)
+				})
+			);
+			if(true) // Toggle output.json
+				fs.writeSync(fd,state+'\n');
+		}).bind(
+			null,
+			eval(process.argv[2])
 		)
 	);
 })();
