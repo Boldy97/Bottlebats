@@ -30,7 +30,8 @@ This is a collection of bots for the Battlebots project of [MOZAIC](https://gith
 
 ### QuintenDV (Quinten)
 
-???
+Command on linux:  
+`nodejs $PATH$/testBot.js`
 
 ### SuperMcBrent (Brent)
 
