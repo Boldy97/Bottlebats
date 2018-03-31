@@ -35,7 +35,7 @@ Command on linux:
 
 ### SuperMcBrent (Brent)
 
-???
+T'zelfde als bij Booby97, cuz im lazy like that... Except dak maar ene bot heb "uselessFile.js"
 
 ### ??? (Nikita)
 
