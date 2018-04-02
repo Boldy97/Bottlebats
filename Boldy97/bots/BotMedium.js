@@ -16,7 +16,7 @@ module.exports = class BotMedium extends Bot {
 
 		this.state.planets.filter(planet => planet.player.type === TYPE_ALLIED).forEach(planet => {
 			let reserved = planet.moves_in.reduce((reserved,move) => {
-				reserved = Math.max(move.ships-planet.getDistance(move.from));
+				return reserved = Math.max(reserved,move.ships-move.turns+1);
 			},0);
 			if(reserved >= planet.ships)
 				return;
@@ -32,7 +32,7 @@ module.exports = class BotMedium extends Bot {
 					ship_count: planet.ships-reserved,
 				});
 		});
-		
+
 		return moves;
 	}
 

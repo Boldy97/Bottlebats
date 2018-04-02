@@ -135,8 +135,8 @@ exports.State = class State {
 		this.check(data);
 	}
 
-	check(data){
-		//TODO remove
+	check(data){ // TODO remove
+		
 		/*for(let planet of this.planets)
 			console.log(`${planet.name} : player ${planet.player.name} - ${planet.ships} ships`);
 		for(let move of this.moves)
