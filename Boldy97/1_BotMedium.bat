@@ -1,2 +1,2 @@
-/programs/node/node run.js BotMedium < games/large.json
+/programs/node/node run.js BotMedium < games/hex.json
 PAUSE

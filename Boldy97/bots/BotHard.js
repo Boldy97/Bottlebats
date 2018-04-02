@@ -1,8 +1,10 @@
 'use strict'
 
-const RoutedState = require('../classes/RoutedState');
+//const RoutedState = require('./RoutedState');
+const Bot = require('./Bot');
+const {State, TYPE_NEUTRAL, TYPE_ALLIED, TYPE_HOSTILE} = require('../classes/State');
 
-module.exports = class BotHard {
+module.exports = class BotHard extends Bot {
 
 	/*
 	* try to defend a planet if you can (support from neighbours)
@@ -16,15 +18,12 @@ module.exports = class BotHard {
 			* with extra armies to sustain an attack from the closest FLOOR(SQRT(planetcount)) hostile neighbours
 		* send the rest to nearby planets to weaken them
 	*/
-	static getMoves(state){
-		state = new RoutedState(1,null,state);
 
-		/*console.log(Utilities.stateToString(state));
-		crash();*/
+	constructor(ownername,neutralname){
+		super(State,ownername,neutralname);
+	}
 
-		/*for(let planet of state.planets)
-			getFutureState(planet,100);*/
-
+	getMoves(){
 		return [];
 	}
 

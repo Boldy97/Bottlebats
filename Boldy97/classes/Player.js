@@ -1,34 +1,62 @@
 'use strict'
 
-const Utilities = require('./Utilities');
-
 module.exports = class Player {
 
-	constructor(state,name){
+	constructor(state,name,type){
 		this.state = state;
 		this.name = name;
-		this.type = Utilities.getPlayerTypeFromName(name);
-		this.score = 0;
+		this.type = type;
 		this.planets = [];
 		this.moves = [];
 	}
 
+	getShipIncrement(){
+		return this.type===this.state.TYPE_NEUTRAL?0:1;
+	}
+
 	addPlanet(planet){
-		this.score += planet.ships;
+		//check
+		if(this.planets.indexOf(planet) !== -1)
+			return;
+		//this
 		this.planets.push(planet);
+		//remove
+		//add
+		planet.setPlayer(this);
 	}
 
 	addMove(move){
-		this.score += move.ships;
+		//check
+		if(this.moves.indexOf(move) !== -1)
+			return;
+		//this
 		this.moves.push(move);
+		//remove
+		//add
 	}
 
-	sort(){
-		this.moves.sort((a,b) => a.turns - b.turns);
+	removePlanet(planet){
+		//check
+		let index = this.planets.indexOf(planet);
+		if(index === -1)
+			return;
+		//this
+		this.planets.splice(index,1);
+		//remove
+		planet.setPlayer(undefined);
+		//add
 	}
 
-	getShipIncrement(){
-		return this.type===Utilities.TYPE_NEUTRAL?0:1;
+	removeMove(move){
+		//check
+		let index = this.moves.indexOf(move);
+		if(index === -1)
+			return;
+		//this
+		this.moves.splice(index,1);
+		//remove
+		move.remove();
+		//add
 	}
 
 }

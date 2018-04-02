@@ -2,16 +2,30 @@
 
 module.exports = class Move {
 
-	constructor(state,basicmove,from,to,player){
-		this.state = state;
+	constructor(id,from,to,player,ships,turns){
+		this.id = id;
 		this.from = from;
 		this.to = to;
-		this.ships = basicmove.ship_count;
-		this.turns = basicmove.turns_remaining;
 		this.player = player;
+		this.ships = ships;
+		this.turns = turns;
+	}
 
-		to.addMove(this);
-		player.addMove(this);
+	remove(){
+		//check
+		//this
+		//remove
+		this.player.state.removeMove(this);
+		this.player.removeMove(this);
+		this.to.removeMove(this);
+		this.from.removeMove(this);
+		//add
+	}
+
+	processTurn(){
+		this.turns--;
+		if(this.turns < 1)
+			this.remove();
 	}
 
 }

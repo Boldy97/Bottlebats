@@ -1,35 +1,33 @@
 'use strict'
 
-const Utilities = require('../classes/Utilities');
+const Bot = require('./Bot');
+const {State, TYPE_NEUTRAL, TYPE_ALLIED, TYPE_HOSTILE} = require('../classes/State');
 
-module.exports = class BotSimple {
+module.exports = class BotSimple extends Bot {
 
 	// Attacks with all planets to the nearest not-owned planet
-	static getMoves(state){
+
+	constructor(ownername,neutralname){
+		super(State,ownername,neutralname);
+	}
+
+	getMoves(){
 		let moves = [];
-		//For all planets that are mine
-		for(let origin of state.planets){
-			if(origin.owner !== 1)
-				continue;
-			//For all planets that are not mine
-			let destination,dist = Infinity;
-			for(let temp_destination of state.planets){
-				if(temp_destination.owner === 1)
-					continue;
-				let temp_dist = Utilities.getDistance(origin,temp_destination);
-				if(temp_dist < dist){
-					destination = temp_destination
-					dist = temp_dist;
-				}
-			}
-			if(destination === undefined)
-				continue;
-			moves.push({
-				origin: origin.name,
-				destination: destination.name,
-				ship_count: origin.ship_count,
-			});
-		}
+
+		this.state.planets.filter(planet => planet.player.type === TYPE_ALLIED).forEach(planet => {
+			let to = this.state.planets.filter(planet2 => planet2.player.type !== TYPE_ALLIED).reduce((result,planet2) => {
+				if(planet.getDistance(planet2) < result.distance)
+					result.distance = planet.getDistance(result.to = planet2);
+				return result;
+			},{to:undefined,distance:Infinity}).to;
+			if(to !== undefined)
+				moves.push({
+					origin: planet.name,
+					destination: to.name,
+					ship_count: planet.ships,
+				});
+		});
+
 		return moves;
 	}
 

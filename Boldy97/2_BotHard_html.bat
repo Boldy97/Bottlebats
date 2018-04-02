@@ -1,2 +1,2 @@
-/programs/node/node run.js BotHard < games/large.json > output.html
+/programs/node/node run.js BotHard < games/large.json > temp/output.html
 PAUSE

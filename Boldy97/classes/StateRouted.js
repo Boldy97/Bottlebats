@@ -1,21 +1,15 @@
 'use strict'
 
 const Utilities = require('./Utilities');
-const State = require('./State');
+const {State} = require('./State');
 
 let routing;
 
-module.exports = class RoutedState extends State {
+module.exports = class StateRouted extends State {
 
-	constructor(ownername,neutralname,basicstate){
-		super(ownername,neutralname,basicstate);
+	constructor(ownername,neutralname){
+		super(ownername,neutralname);
 		this.routing = this.getRouting();
-
-		// TODO debug (routing to svg with circles and lines)
-		/*this.planets.forEach(planet => {
-			console.log(planet.name);
-		});
-		Utilities.crash();*/
 	}
 
 	getRouting(){
@@ -29,11 +23,11 @@ module.exports = class RoutedState extends State {
 		}
 		for(let i=0;i<N;i++)
 			for(let j=i;j<N;j++)
-				D[i][j] = D[j][i] = E[i][j] = E[j][i] = Utilities.getDistance(this.planets[i],this.planets[j]);
+				D[i][j] = D[j][i] = E[i][j] = E[j][i] = this.planets[i].getDistance(this.planets[j]);
 
 		for(let k=0;k<N;k++)
 			for(let i=0;i<N;i++)
-				for(let j=0;j<N;j++) // TODO maybe only do one half of the graph? (where i >= j)
+				for(let j=0;j<i;j++)
 					if(D[i][j] > D[i][k] + D[k][j])
 						D[i][j] = D[i][k] + D[k][j];
 
