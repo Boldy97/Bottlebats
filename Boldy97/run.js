@@ -15,7 +15,7 @@ const BOTS = validBots.reduce((acc,val) => {
 /* Libraries */
 
 const fs = require('fs');
-const fd = fs.openSync('temp/output.json','w');
+const fd = fs.openSync(__dirname+'\\temp\\output.json','w');
 const readline = require('readline').createInterface({
 	input: process.stdin,
 	output: process.stdout,
