@@ -2,8 +2,8 @@
 
 module.exports = class Bot {
 
-	constructor(stateclass,ownername,neutralname){
-		this.state = new stateclass(ownername,neutralname);
+	constructor(State,ownername,neutralname){
+		this.state = new State(ownername,neutralname);
 	}
 
 	processData(data){
@@ -11,7 +11,7 @@ module.exports = class Bot {
 	}
 
 	getMoves(){
-		throw 'Must implement method getMoves';
+		throw 'Must implement method getMoves in '+this;
 	}
 
 }

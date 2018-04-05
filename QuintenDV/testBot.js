@@ -13,6 +13,17 @@ function calcDist(p1, p2){
 }
 
 function handle(text) {
+    // Log moves
+    console.log(
+        JSON.stringify(
+            {
+                moves:getMoves(text)
+            }
+        )
+    );
+}
+
+function getMoves(text){
     counter++;
     let obj = JSON.parse(text);
     let players = obj.players
@@ -25,14 +36,14 @@ function handle(text) {
                 myPlanets.push(planet);
         }
     } 
+
     if (!myPlanets.length){
-        console.log("");
-        return;
+        return [];
     }
 
-    let result = {
-                    moves: [],
-                 };
+    let moves = [];
+
+
 
     // Find target for every planet
     for (let myPlanet of myPlanets){
@@ -67,13 +78,16 @@ function handle(text) {
             //debug(myPlanet.name);
             enemyPlanet=myPlanet;
         }        
-        result.moves.push({
+        moves.push({
         'origin': myPlanet['name'],
         'destination': neutral ? neutral['name']:enemyPlanet['name'],
         'ship_count': myPlanet['ship_count'] - 5  > 0 ? myPlanet['ship_count'] - 5 : 0
         });        
     }
 
-    // Log moves
-    console.log(JSON.stringify(result));
+    return moves;
 }
+
+// exports
+
+exports.getMoves = getMoves;

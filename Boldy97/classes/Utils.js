@@ -1,5 +1,10 @@
 'use strict'
 
+exports.TYPES = {};
+exports.TYPES.NEUTRAL = 'NEUTRAL';
+exports.TYPES.ALLIED = 'ALLIED';
+exports.TYPES.HOSTILE = 'HOSTILE';
+
 exports.crash = function(message){
 	throw new Error(message);
 };

@@ -1,74 +1,66 @@
 'use strict'
 
-const Utilities = require('./Utilities');
-const {State} = require('./State');
-
-let routing;
+const Future = require('./Future');
+const LinkRouted = require('./LinkRouted');
+const Move = require('./Move');
+const Player = require('./Player');
+const PlanetRouted = require('./PlanetRouted');
+const State = require('./State');
+const Utils = require('./Utils');
 
 module.exports = class StateRouted extends State {
 
 	constructor(ownername,neutralname){
-		super(ownername,neutralname);
-		this.routing = this.getRouting();
+		super(Player,PlanetRouted,Move,Future,LinkRouted,ownername,neutralname);
 	}
 
-	getRouting(){
-		if(routing !== undefined)
-			return routing;
+	processTurn(){
+		super.processTurn();
+		if(this.turns === 1)
+			this.updateLinks();
+	}
 
-		let N = this.planets.length, D = [], E = [];
+	updateLinks(){
+		let N = this.planets.length;
+		let dist = [];
+		let dist_copy = [];
 		for(let i=0;i<N;i++){
-			D[i] = [];
-			E[i] = [];
+			dist[i] = [];
+			dist_copy[i] = [];
+			dist[i][i] = dist_copy[i][i] = 0;
 		}
 		for(let i=0;i<N;i++)
-			for(let j=i;j<N;j++)
-				D[i][j] = D[j][i] = E[i][j] = E[j][i] = this.planets[i].getDistance(this.planets[j]);
+			for(let j=0;j<i;j++)
+				dist[i][j] = dist[j][i] = dist_copy[i][j] = dist_copy[j][i] = this.planets[i].getLink(this.planets[j]).distance;
+
 
 		for(let k=0;k<N;k++)
 			for(let i=0;i<N;i++)
 				for(let j=0;j<i;j++)
-					if(D[i][j] > D[i][k] + D[k][j])
-						D[i][j] = D[i][k] + D[k][j];
+					if(dist[i][j] > dist[i][k] + dist[k][j])
+						dist[i][j] = dist[i][k] + dist[k][j];
 
-		//this.printTable(D);
+		//this.printTable(dist_copy);
+		//this.printTable(dist);
 
 		for(let i=0;i<N;i++)
-			this.planets[i].routing = {};
-		let L = [];
-		for(let i=0;i<N;i++){
-			L[i] = [];
+			this.planets[i].links.length = 0;
+		for(let i=0;i<N;i++)
 			for(let j=0;j<i;j++)
-				if(D[i][j] === E[i][j])
-					L[i].push(j);
-			/*for(let j=0;j<i;j++){
-				// TODO check if distance equal to original
-				// TODO if so, link right away
-				// TODO if not, get
-				this.planets[i].routing[this.planets[j].name] = 
-				this.planets.
-			}*/
-		}
+				if(dist[i][j] === dist_copy[i][j])
+					this.planets[i].addLink(this.planets[j],Math.sqrt(dist[i][j]));
 
-		this.getSvg(L);
+		this.toSvg();
 		/*this.printTable(E);
 		this.printTable(D);
 		this.printTable(L);*/
-		Utilities.crash();
-
-
-
-
-
-
-
-		routing = {};
-		return routing;
+		//Utils.crash();
 	}
 
 	printTable(table){
 		for(let i=0;i<80;i++)
 			process.stdout.write('-');
+		console.log();
 		for(let i=0;i<table.length;i++){
 			for(let j=0;j<table[i].length;j++)
 				process.stdout.write(table[i][j]+'\t');
@@ -77,9 +69,10 @@ module.exports = class StateRouted extends State {
 
 		for(let i=0;i<80;i++)
 			process.stdout.write('-');
+		console.log();
 	}
 
-	getSvg(links){
+	toSvg(){
 		let dims = {
 			x:[Infinity,-Infinity],
 			y:[Infinity,-Infinity],
@@ -95,16 +88,13 @@ module.exports = class StateRouted extends State {
 				dims.y[1] = planet.y;
 		});
 
-		console.log(`<svg style='width:100%;height:auto' viewBox='${dims.x[0]-1} ${dims.y[0]-1} ${dims.x[1]-dims.x[0]+2} ${dims.y[1]-dims.y[0]+2}' >`);
+		console.error(`<svg style='width:100%;height:auto' viewBox='${dims.x[0]-1} ${dims.y[0]-1} ${dims.x[1]-dims.x[0]+2} ${dims.y[1]-dims.y[0]+2}' >`);
 		this.planets.forEach(planet => {
-			console.log(`<circle fill='black' cx='${planet.x}'' cy='${planet.y}' r='1' />`);
+			console.error(`<circle fill='black' cx='${planet.x}'' cy='${planet.y}' r='1' />`);
 		});
-		for(let i=0;i<links.length;i++)
-			for(let j=0;j<links[i].length;j++){
-				let r = [Math.random()-0.5,Math.random()-0.5,Math.random()-0.5,Math.random()-0.5];
-				console.log(`<line stroke='red' stroke-width='0.1' stroke-linecap='round' x1='${this.planets[i].x+r[0]}' y1='${this.planets[i].y+r[1]}' x2='${this.planets[links[i][j]].x+r[2]}' y2='${this.planets[links[i][j]].y+r[3]}' />`);
-			}
-		// TODO add routing lines
-		console.log('</svg>');
+		for(let planet of this.planets)
+			for(let link of planet.links)
+				console.error(`<line stroke='red' stroke-width='0.1' stroke-linecap='round' x1='${planet.x}' y1='${planet.y}' x2='${link.planet.x}' y2='${link.planet.y}' />`);
+		console.error('</svg>');
 	}
 }

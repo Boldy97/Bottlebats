@@ -1,30 +1,26 @@
 'use strict'
 
-const Player = require('./Player');
-const Planet = require('./Planet');
-const Move = require('./Move');
+const Utils = require('./Utils');
 
-exports.TYPE_NEUTRAL = 'NEUTRAL';
-exports.TYPE_ALLIED = 'ALLIED';
-exports.TYPE_HOSTILE = 'HOSTILE';
+module.exports = class State {
 
-exports.State = class State {
-
-	constructor(ownername,neutralname){
+	constructor(Player,Planet,Move,Future,Link,ownername,neutralname){
+		this.Player = Player;
+		this.Planet = Planet;
+		this.Move = Move;
+		this.Future = Future;
+		this.Link = Link;
 		this.ownername = ownername;
 		this.neutralname = neutralname;
 		this.players = [];
 		this.planets = [];
 		this.moves = [];
-		this.TYPE_NEUTRAL = exports.TYPE_NEUTRAL;
-		this.TYPE_ALLIED = exports.TYPE_ALLIED;
-		this.TYPE_HOSTILE = exports.TYPE_HOSTILE;
 
 		this.addPlayer(neutralname);
 	}
 
 	getPlayerTypeFromName(name){
-		return name===this.ownername?exports.TYPE_ALLIED:name===this.neutralname?exports.TYPE_NEUTRAL:exports.TYPE_HOSTILE;
+		return name===this.ownername?Utils.TYPES.ALLIED:name===this.neutralname?Utils.TYPES.NEUTRAL:Utils.TYPES.HOSTILE;
 	}
 
 	getPlayer(name){
@@ -39,11 +35,20 @@ exports.State = class State {
 		return this.moves.find(move => move.id === id);
 	}
 
+	toJSON(){
+		let result = {planets:[],expeditions:[]};
+		for(let planet of this.planets)
+			result.planets.push({x:planet.x,y:planet.y,name:planet.name,ship_count:planet.ships,owner:planet.player.name});
+		for(let move of this.moves)
+			result.expeditions.push({id:move.id,origin:move.from.name,destination:move.to.name,owner:move.player.name,ship_count:move.ships,turns_remaining:move.turns});
+		return JSON.stringify(result);
+	}
+
 	addPlayer(name){
 		let player = this.getPlayer(name);
 		if(player !== undefined)
 			return player;
-		player = new Player(this,name,this.getPlayerTypeFromName(name));
+		player = new this.Player(this,name,this.getPlayerTypeFromName(name));
 
 		this.players.push(player);
 
@@ -54,7 +59,7 @@ exports.State = class State {
 		let planet = this.getPlanet(name);
 		if(planet !== undefined)
 			return planet;
-		planet = new Planet(x,y,name,ships,player);
+		planet = new this.Planet(this.Future,this.Link,x,y,name,ships,player);
 
 		this.planets.push(planet);
 		player.addPlanet(planet);
@@ -66,7 +71,7 @@ exports.State = class State {
 		let move = this.getMove(id);
 		if(move !== undefined)
 			return move;
-		move = new Move(id,from,to,player,ships,turns);
+		move = new this.Move(id,from,to,player,ships,turns);
 
 		this.moves.push(move);
 		player.addMove(move);
@@ -131,8 +136,7 @@ exports.State = class State {
 
 		this.processTurn();
 
-		
-		this.check(data);
+		if(!(new Error().stack.includes('BotDead'))) this.check(data);
 	}
 
 	check(data){ // TODO remove
@@ -162,7 +166,7 @@ exports.State = class State {
 			if(planet.owner !== planet2.player.name)
 				throw `player mismatch @ ${planet2.name} is ${planet2.player.name} should be ${planet.owner}`;
 			if(planet.ship_count !== planet2.ships)
-				throw `ships mismatch @ ${planet2.name} is ${planet2.ships} should be ${planet.ship_count} with owner ${planet2.player.name} and inc ${planet2.player.getShipIncrement()} and type ${planet2.player.type}`;
+				throw new Error(`ships mismatch @ ${planet2.name} is ${planet2.ships} should be ${planet.ship_count}`);
 		}
 	}
 

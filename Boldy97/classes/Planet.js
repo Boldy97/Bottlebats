@@ -1,10 +1,9 @@
 'use strict'
 
-const Future = require('./Future');
-
 module.exports = class Planet {
 
-	constructor(x,y,name,ships,player){
+	constructor(Future,Link,x,y,name,ships,player){
+		this.Future = Future;
 		this.x = x;
 		this.y = y;
 		this.name = name;
@@ -13,9 +12,11 @@ module.exports = class Planet {
 		this.moves_in = [];
 		this.moves_out = [];
 		this.future = [];
+		this.links = [];
 
 		this.setShips(ships);
 		this.setPlayer(player);
+		player.state.planets.forEach(planet => this.addLink(planet));
 	}
 
 	getDistance(planet){
@@ -30,8 +31,12 @@ module.exports = class Planet {
 		if(turns > this.future.length)
 			this.getFuture(turns-1);
 		if(turns === this.future.length)
-			this.future[turns] = new Future(this,this.future[turns-1],this.moves_in.filter(move => move.turns === turns));
+			this.future[turns] = new this.Future(this,this.future[turns-1],this.moves_in.filter(move => move.turns === turns));
 		return this.future[turns];
+	}
+
+	getLink(planet){
+		return this.links.find(link => link.planet === planet);
 	}
 
 	setShips(ships){
@@ -81,6 +86,17 @@ module.exports = class Planet {
 			//remove
 			//add
 		}
+	}
+
+	addLink(planet,turns){
+		if(this.getLink(planet))
+			return;
+		turns = turns || this.getRealDistance(planet);
+		this.links.push(new this.player.state.Link(
+			planet,
+			turns,
+		));
+		planet.addLink(this,turns);
 	}
 
 	removeMove(move){

@@ -6,7 +6,8 @@ let validBots = ['BotSimple','BotMedium','BotHard'];
 
 /* Imports */
 
-const Utilities = require('./classes/Utilities');
+const Utils = require('./classes/Utils');
+const Timer = require('./classes/Timer');
 const BOTS = validBots.reduce((acc,val) => {
 	acc[val] = require('./bots/'+val);
 	return acc;
@@ -24,15 +25,18 @@ const readline = require('readline').createInterface({
 
 /* Start */
 
+//Timer.start();
 (() => {
 	if(!validBots.includes(process.argv[2]))
-		Utilities.crash(process.argv[2]+' is not a valid bot!');
+		Utils.crash(process.argv[2]+' is not a valid bot!');
 	readline.on('line',
 		((bot,data) => {
 			bot.processData(JSON.parse(data));
 			console.log(JSON.stringify({
 				moves: bot.getMoves()
 			}));
+			//bot.getMoves();
+			//Timer.step();
 			if(false) // Toggle output.json
 				fs.writeSync(fd,data+'\n');
 		}).bind(undefined,new BOTS[process.argv[2]](1,null))

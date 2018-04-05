@@ -1,8 +1,7 @@
 'use strict'
 
-//const RoutedState = require('./RoutedState');
 const Bot = require('./Bot');
-const {State, TYPE_NEUTRAL, TYPE_ALLIED, TYPE_HOSTILE} = require('../classes/State');
+const StateRouted = require('../classes/StateRouted');
 
 module.exports = class BotHard extends Bot {
 
@@ -20,7 +19,7 @@ module.exports = class BotHard extends Bot {
 	*/
 
 	constructor(ownername,neutralname){
-		super(State,ownername,neutralname);
+		super(StateRouted,ownername,neutralname);
 	}
 
 	getMoves(){

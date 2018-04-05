@@ -1,5 +1,7 @@
 'use strict'
 
+const Utils = require('../classes/Utils');
+
 module.exports = class Player {
 
 	constructor(state,name,type){
@@ -11,7 +13,7 @@ module.exports = class Player {
 	}
 
 	getShipIncrement(){
-		return this.type===this.state.TYPE_NEUTRAL?0:1;
+		return this.type===Utils.TYPES.NEUTRAL?0:1;
 	}
 
 	addPlanet(planet){
