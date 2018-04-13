@@ -4,8 +4,8 @@ const Link = require('./Link');
 
 module.exports = class LinkRouted extends Link {
 
-	constructor(planet,turns){
-		super(planet,turns);
+	constructor(from,to,turns){
+		super(from,to,turns);
 		this.distance = turns*turns;
 	}
 

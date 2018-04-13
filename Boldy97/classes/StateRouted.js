@@ -12,49 +12,64 @@ module.exports = class StateRouted extends State {
 
 	constructor(ownername,neutralname){
 		super(Player,PlanetRouted,Move,Future,LinkRouted,ownername,neutralname);
+		this.linksUpdated = false;
 	}
 
 	processTurn(){
 		super.processTurn();
-		if(this.turns === 1)
+		if(!this.linksUpdated)
 			this.updateLinks();
 	}
 
 	updateLinks(){
 		let N = this.planets.length;
 		let dist = [];
-		let dist_copy = [];
+		let via = [];
+
 		for(let i=0;i<N;i++){
 			dist[i] = [];
-			dist_copy[i] = [];
-			dist[i][i] = dist_copy[i][i] = 0;
+			via[i] = [];
+			dist[i][i] = 0;
 		}
-		for(let i=0;i<N;i++)
-			for(let j=0;j<i;j++)
-				dist[i][j] = dist[j][i] = dist_copy[i][j] = dist_copy[j][i] = this.planets[i].getLink(this.planets[j]).distance;
 
+		for(let i=0;i<N;i++)
+			for(let j=0;j<i;j++){
+				dist[i][j] = dist[j][i] = this.planets[i].getLink(this.planets[j]).distance;
+				via[i][j] = j;
+				via[j][i] = i;
+			}
 
 		for(let k=0;k<N;k++)
 			for(let i=0;i<N;i++)
-				for(let j=0;j<i;j++)
-					if(dist[i][j] > dist[i][k] + dist[k][j])
+				for(let j=0;j<N;j++)
+					if(dist[i][j] > dist[i][k] + dist[k][j]){
 						dist[i][j] = dist[i][k] + dist[k][j];
-
-		//this.printTable(dist_copy);
-		//this.printTable(dist);
+						via[i][j] = via[i][k];
+					}
 
 		for(let i=0;i<N;i++)
 			this.planets[i].links.length = 0;
+
 		for(let i=0;i<N;i++)
 			for(let j=0;j<i;j++)
-				if(dist[i][j] === dist_copy[i][j])
+				if(via[i][j] === j)
 					this.planets[i].addLink(this.planets[j],Math.sqrt(dist[i][j]));
 
-		this.toSvg();
+		for(let i=0;i<N;i++)
+			for(let j=0;j<N;j++)
+				if(i !== j)
+					this.planets[i].addRoute(
+						this.planets[j],
+						this.planets[via[i][j]],
+						this.planets[i].getLink(this.planets[via[i][j]]).turns
+					);
+
+		//this.toSvg();
 		/*this.printTable(E);
 		this.printTable(D);
 		this.printTable(L);*/
 		//Utils.crash();
+		this.linksUpdated = true;
 	}
 
 	printTable(table){
@@ -92,9 +107,11 @@ module.exports = class StateRouted extends State {
 		this.planets.forEach(planet => {
 			console.error(`<circle fill='black' cx='${planet.x}'' cy='${planet.y}' r='1' />`);
 		});
-		for(let planet of this.planets)
+		for(let planet of this.planets){
+			console.error(`${planet.name} - ${planet.links.length}`);
 			for(let link of planet.links)
-				console.error(`<line stroke='red' stroke-width='0.1' stroke-linecap='round' x1='${planet.x}' y1='${planet.y}' x2='${link.planet.x}' y2='${link.planet.y}' />`);
+				console.error(`<line stroke='red' stroke-width='0.1' stroke-linecap='round' x1='${planet.x}' y1='${planet.y}' x2='${link.to.x}' y2='${link.to.y}' />`);
+		}
 		console.error('</svg>');
 	}
 }

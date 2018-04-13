@@ -2,7 +2,7 @@
 
 module.exports = class Planet {
 
-	constructor(Future,Link,x,y,name,ships,player){
+	constructor(Future,x,y,name,ships,player){
 		this.Future = Future;
 		this.x = x;
 		this.y = y;
@@ -36,7 +36,7 @@ module.exports = class Planet {
 	}
 
 	getLink(planet){
-		return this.links.find(link => link.planet === planet);
+		return this.links.find(link => link.to === planet);
 	}
 
 	setShips(ships){
@@ -93,6 +93,7 @@ module.exports = class Planet {
 			return;
 		turns = turns || this.getRealDistance(planet);
 		this.links.push(new this.player.state.Link(
+			this,
 			planet,
 			turns,
 		));
@@ -136,8 +137,9 @@ module.exports = class Planet {
 		let future = this.getFuture(1);
 		this.setPlayer(future.player);
 		this.setShips(future.ships);
-		this.future.splice(0,1);
 		//remove
+		this.future.splice(0,1);
+		this.reserved = undefined;
 		//add
 	}
 

@@ -11,7 +11,7 @@ module.exports = class Bot {
 	}
 
 	getMoves(){
-		throw 'Must implement method getMoves in '+this;
+		throw new Error('Must implement method getMoves in '+this.constructor.name);
 	}
 
 }

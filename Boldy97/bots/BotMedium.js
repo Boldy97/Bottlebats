@@ -21,17 +21,13 @@ module.exports = class BotMedium extends Bot {
 			},0);
 			if(reserved >= planet.ships)
 				return;
-			let link = planet.links.filter(link => link.planet.player.type !== Utils.TYPES.ALLIED).reduce((result,link) => {
+			let link = planet.links.filter(link => link.to.player.type !== Utils.TYPES.ALLIED).reduce((result,link) => {
 				if(link.turns < result.turns)
 					result = link;
 				return result;
-			},{turns:Infinity}).planet;
-			if(link !== undefined)
-				moves.push({
-					origin: planet.name,
-					destination: link.name,
-					ship_count: planet.ships,
-				});
+			},{turns:Infinity});
+			if(link.turns !== Infinity)
+				moves.push(link.toOutputMove(planet.ships-reserved));
 		});
 
 		return moves;

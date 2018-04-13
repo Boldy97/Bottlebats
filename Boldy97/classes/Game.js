@@ -6,18 +6,20 @@ const BotDead = require('../bots/BotDead');
 const BotSimple = require('../bots/BotSimple');
 const BotMedium = require('../bots/BotMedium');
 const BotHard = require('../bots/BotHard');
-const BotQuinten = require('../../QuintenDV/testBot');
+//const BotQuinten = require('../../QuintenDV/testBot');
+const MessageReserved = require('./messages/MessageReserved');
+const MessageRequested = require('./messages/MessageRequested');
 
 function start(){
-	playOne();
-	//playMultiple();
+	//playOne();
+	playMultiple();
 }
 
 function playOne(){
 	new Game(1,null,true,
-		new BotSimple(1,null),
 		new BotMedium(1,null),
-		new AdapterQuinten(),
+		new BotHard(1,null),
+		//new AdapterQuinten(),
 	).execute()
 }
 
@@ -26,8 +28,8 @@ function playMultiple(){
 	let draws = [0,0];
 	for(let i=0;i<100;i++){
 		let players = new Game(1,null,false,
-			new BotSimple(1,null),
 			new BotMedium(1,null),
+			new BotHard(1,null),
 		).execute();
 		if(players.size === 1)
 			wins[players.values().next().value-2]++;
@@ -37,7 +39,9 @@ function playMultiple(){
 				draws[values.next().value-2]++;
 		}
 	}
+	console.log('wins:');
 	console.log(wins);
+	console.log('draws:');
 	console.log(draws);
 }
 
@@ -79,20 +83,40 @@ class Game {
 	}
 
 	init(){
-		// use the first line of large.json for now TODO random map?
-		let state = JSON.parse(fs.readFileSync(__dirname+'\\..\\games\\large.json').toString().split('\n')[0]);
-		for(let planet of state.planets){
+		let map = this.getMapLarge();
+		//let map = this.getMapSquare(5,20);
+		for(let planet of map.planets){
 			planet.owner = this.neutralname;
-			planet.ship_count = 5;
 			this.state.planets.push(planet);
 		}
-		for(let i=2;i<this.bots.length;i++){
-			let rand = Math.floor(Math.random()*this.state.planets.length);
-			while(this.state.planets[rand].owner !== this.neutralname)
-				rand = Math.floor(Math.random()*this.state.planets.length);
-			this.state.planets[rand].owner = i;
-		}
+		for(let i=2;i<this.bots.length;i++)
+			this.state.planets[map.spots[i-2]].owner = i;
 		this.processMoves([]);
+	}
+
+	getMapLarge(){
+		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\games\\large.json').toString().split('\n')[0]);
+		result.spots = [];
+		result.planets.forEach((planet,i) => {
+			planet.owner = this.neutralname;
+			planet.ship_count = 5;
+			result.spots.push(i);
+		});
+		Utils.shuffle(result.spots);
+		return result;
+	}
+
+	getMapSquare(dim,dist){
+		let result = {planets:[],spots:[0,dim*dim-1,dim-1,dim*(dim-1)]};
+		for(let i=0;i<dim;i++)
+			for(let j=0;j<dim;j++)
+				result.planets.push({
+					name:i+'-'+j,
+					x:i*dist,
+					y:j*dist,
+					ship_count:5,
+				});
+		return result;
 	}
 
 	getPlayersRemaining(){
@@ -125,6 +149,28 @@ class Game {
 			});
 			this.bots[i].processData(state);
 		}
+		//TODO remove
+		this.bots[3].state.planets.forEach(planet => {
+			this.state.planets.find(planet2 => planet2.name === planet.name).meta =
+			{
+				reserved:planet.getValue(MessageReserved),
+				links:planet.links.map(link => {
+					return {
+						from:link.from.name,
+						to:link.to.name,
+						turns:link.turns,
+					};
+				}),
+				messages:planet.messages.map(message => {
+					return {
+						name:message.constructor.name,
+						from:message.from.name,
+						to:message.to.name,
+						value:message.value
+					};
+				}),
+			};
+		});
 	}
 
 	getMoves(){
@@ -182,26 +228,29 @@ class Game {
 		});
 		fs.writeSync(file,`
 			<html><body>
-			<span>Turn:</span>
-			<input id='turnSlider' type='range' min='0' max='${this.history.length-1}' value='0'>
-			<br>
-			<button id='previousButton'>Previous</button>
-			<button id='nextButton'>Next</button>
-			<br>
-			<span>Speed:</span>
-			<input id='speedSlider' type='range' min='1' max='100' value='1'>
-			<br>
-			<button id='playButton'>Play</button>
-			<button id='stopButton'>Stop</button>
-			<svg style='width:100%;height:auto' viewBox='${dims.x[0]-1} ${dims.y[0]-1} ${dims.x[1]-dims.x[0]+2} ${dims.y[1]-dims.y[0]+2}'>
+			<textarea id='menu' rows='20' cols='50' required></textarea>
+			<div id='controls'>
+				<span>Turn:</span>
+				<input id='turnSlider' type='range' min='0' max='${this.history.length-1}' value='0'>
+				<br>
+				<button id='previousButton'>Previous</button>
+				<button id='nextButton'>Next</button>
+				<br>
+				<span>Speed:</span>
+				<input id='speedSlider' type='range' min='1' max='100' value='1'>
+				<br>
+				<button id='playButton'>Play</button>
+				<button id='stopButton'>Stop</button>
+			</div>
+			<svg viewBox='${dims.x[0]-1} ${dims.y[0]-1} ${dims.x[1]-dims.x[0]+2} ${dims.y[1]-dims.y[0]+2}'>
 		`);
 		this.state.planets.forEach(planet => {
 			fs.writeSync(file,`
-				<circle id='planet_${planet.name}' r='1' stroke-width='0.1' stroke='white' cx='${planet.x}' cy='${planet.y}'/>
-				<text id='planet_ships_${planet.name}' fill='white' stroke='none' font-size='0.5' x='${planet.x}'' y='${planet.y}'/>
+				<circle class='planet' id='planet_${planet.name}' r='1' stroke-width='0.1' stroke='white' cx='${planet.x}' cy='${planet.y}'/>
+				<text id='planet_ships_${planet.name}' fill='white' stroke='none' font-size='1.5' x='${planet.x-0.5}'' y='${planet.y+0.5}'/>
 				`);
 		});
-		fs.writeSync(file,`</svg>`);
+		fs.writeSync(file,'</svg>');
 
 		fs.writeSync(file,`
 			<style>
@@ -211,6 +260,30 @@ class Game {
 				}
 				.move {
 					transition: cx 1s linear,cy 1s linear;
+				}
+				#controls {
+					position: absolute;
+					top: 0.5em;
+					left: 0.5em;
+					z-index: 100;
+				}
+				svg {
+					position: absolute;
+					top: 0;
+					left: 0;
+					width: 70%;
+					height: 100%;
+				}
+				textarea {
+					position: absolute;
+					top: 0;
+					right: 0;
+					width: 30%;
+					height: 100%;
+					z-index: -2;
+				}
+				textarea:invalid {
+					visibility: hidden;
 				}
 			</style>
 			<script>
@@ -284,6 +357,17 @@ class Game {
 					document.styleSheets[0].deleteRule(1);
 					document.styleSheets[0].insertRule('.move { transition: cx '+delay/1000+'s linear,cy '+delay/1000+'s linear; }',1);
 				});
+				let planets = document.getElementsByClassName('planet');
+				for(let i=0;i<planets.length;i++){
+					planets[i].onmouseenter = ((e) => {
+						let name = e.target.id.split('_')[1];
+						window.menu.value = JSON.stringify(turns[turn].planets.find(planet => planet.name === name).meta,null,'  ');
+					});
+					planets[i].onmouseleave = ((e) => {
+						window.menu.value = '';
+					});
+				}
+				
 				let turn = 0;
 				let delay = 1000;
 				let colors = [
@@ -311,7 +395,7 @@ class Game {
 					'#808080', //Grey
 				];
 				let turns = 
-		`,()=>{});
+		`);
 		fs.writeSync(file,JSON.stringify(this.history)+';redraw();</script></body></html>');
 	}
 

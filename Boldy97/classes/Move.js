@@ -11,6 +11,15 @@ module.exports = class Move {
 		this.turns = turns;
 	}
 
+	toOutputMove(){
+		return {
+			origin: this.from.name,
+			destination: this.to.name,
+			ship_count: this.ships,
+			turns: this.turns,
+		};
+	}
+
 	remove(){
 		//check
 		//this

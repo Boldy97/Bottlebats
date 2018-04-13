@@ -59,7 +59,7 @@ module.exports = class State {
 		let planet = this.getPlanet(name);
 		if(planet !== undefined)
 			return planet;
-		planet = new this.Planet(this.Future,this.Link,x,y,name,ships,player);
+		planet = new this.Planet(this.Future,x,y,name,ships,player);
 
 		this.planets.push(planet);
 		player.addPlanet(planet);
@@ -140,12 +140,6 @@ module.exports = class State {
 	}
 
 	check(data){ // TODO remove
-		
-		/*for(let planet of this.planets)
-			console.log(`${planet.name} : player ${planet.player.name} - ${planet.ships} ships`);
-		for(let move of this.moves)
-			console.log(`${move.id} : ${move.from.name} -> ${move.to.name} - player ${move.player.name} - ${move.ships} ships - ${move.turns} turns`);
-		console.log();*/
 
 		if(data.expeditions.length !== this.moves.length){
 			console.log(this.moves.length);

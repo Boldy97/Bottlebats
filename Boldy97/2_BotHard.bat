@@ -1,2 +1,2 @@
-/programs/node/node run.js BotHard < games/large.json
+/programs/node/node --inspect run.js BotHard < games/large.json
 PAUSE
