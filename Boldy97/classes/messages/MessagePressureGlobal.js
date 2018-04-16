@@ -1,16 +1,32 @@
 'use strict'
 
 const Utils = require('../Utils');
-const MessageGlobal = require('./MessageGlobal');
+const Message = require('./Message');
 
-module.exports = class MessageGlobalPressure extends MessageGlobal {
+module.exports = class MessagePressureGlobal extends Message {
+
+	static getRoutes(planet){
+		return this.getRoutesAll(planet);
+	}
+
+	static getDefaultValue(){
+		return 0;
+	}
+
+	reduce(messages){
+		return this.reduceSum(messages);
+	}
+
+	getMessageForRoute(route){
+		return this.getMessageForRouteDecrementing(route);
+	}
 
 	static get(planet){
 		// if not hostile or no incoming attacks, no message
 		if(planet.player.type !== Utils.TYPES.HOSTILE && planet.moves_in.every(move => move.player.type !== Utils.TYPES.HOSTILE))
 			return;
 		
-		let pressure = 0;
+		let pressure = this.getDefaultValue();
 		
 		if(planet.player.type === Utils.TYPES.HOSTILE)
 			pressure += planet.ships;
@@ -25,12 +41,6 @@ module.exports = class MessageGlobalPressure extends MessageGlobal {
 		});
 
 		return new this(undefined,planet,planet,pressure);
-	}
-
-	getMessageForRoute(route){
-		let pressure = this.value-route.turns;
-		//let pressure = this.value;
-		return new this.constructor(this.id,this.from,route.to,pressure);
 	}
 	
 }

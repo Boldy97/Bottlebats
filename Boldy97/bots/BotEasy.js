@@ -4,7 +4,7 @@ const Bot = require('./Bot');
 const StateBasic = require('../classes/StateBasic');
 const Utils = require('../classes/Utils');
 
-module.exports = class BotSimple extends Bot {
+module.exports = class BotEasy extends Bot {
 
 	// Attacks with all planets to the nearest not-owned planet
 

@@ -12,16 +12,18 @@ module.exports = class StateRouted extends State {
 
 	constructor(ownername,neutralname){
 		super(Player,PlanetRouted,Move,Future,LinkRouted,ownername,neutralname);
-		this.linksUpdated = false;
+		this.routingMade = false;
+		// TODO stop when going above 500ms (to be safe)
+		// TODO add extra variables to save progress
 	}
 
 	processTurn(){
 		super.processTurn();
-		if(!this.linksUpdated)
-			this.updateLinks();
+		if(!this.routingMade)
+			this.makeRouting();
 	}
 
-	updateLinks(){
+	makeRouting(){
 		let N = this.planets.length;
 		let dist = [];
 		let via = [];
@@ -64,12 +66,7 @@ module.exports = class StateRouted extends State {
 						this.planets[i].getLink(this.planets[via[i][j]]).turns
 					);
 
-		//this.toSvg();
-		/*this.printTable(E);
-		this.printTable(D);
-		this.printTable(L);*/
-		//Utils.crash();
-		this.linksUpdated = true;
+		this.routingMade = true;
 	}
 
 	printTable(table){

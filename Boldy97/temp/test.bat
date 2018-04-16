@@ -1,2 +1,2 @@
-/programs/node/node test.js > output.html
+/programs/node/node test.js
 PAUSE

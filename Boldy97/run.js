@@ -2,7 +2,7 @@
 
 /* Variables */
 
-let validBots = ['BotSimple','BotMedium','BotHard'];
+let validBots = ['BotEasy','BotMedium','BotHard','BotElite'];
 
 /* Imports */
 
@@ -27,8 +27,11 @@ const readline = require('readline').createInterface({
 
 //Timer.start();
 (() => {
-	if(!validBots.includes(process.argv[2]))
-		Utils.crash(process.argv[2]+' is not a valid bot!');
+	let botname = process.argv[2];
+	if(process.argv.length<3)
+		botname = validBots[validBots.length-1];
+	if(!validBots.includes(botname))
+		Utils.crash(botname+' is not a valid bot!');
 	readline.on('line',
 		((bot,data) => {
 			bot.processData(JSON.parse(data));
@@ -39,6 +42,6 @@ const readline = require('readline').createInterface({
 			//Timer.step();
 			if(false) // Toggle output.json
 				fs.writeSync(fd,data+'\n');
-		}).bind(undefined,new BOTS[process.argv[2]](1,null))
+		}).bind(undefined,new BOTS[botname](1,null))
 	);
 })();

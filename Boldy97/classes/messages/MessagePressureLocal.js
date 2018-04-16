@@ -1,12 +1,25 @@
 'use strict'
 
 const Utils = require('../Utils');
-const MessageLocal = require('./MessageLocal');
+const Message = require('./Message');
 
-module.exports = class MessageLocalPressure extends MessageLocal {
+module.exports = class MessagePressureLocal extends Message {
 
+	static getRoutes(planet){
+		return this.getRoutesNone(planet);
+	}
+
+	static getDefaultValue(){
+		return 0;
+	}
+
+	reduce(messages){
+		return this.reduceSum(messages);
+	}
+
+	// value = howmuch more attackers than defenders are on (the way to) this planet
 	static get(planet){
-		let pressure = 0;
+		let pressure = this.getDefaultValue();
 
 		if(planet.player.type === Utils.TYPES.HOSTILE)
 			pressure += planet.ships;

@@ -5,6 +5,18 @@ exports.TYPES.NEUTRAL = 'NEUTRAL';
 exports.TYPES.ALLIED = 'ALLIED';
 exports.TYPES.HOSTILE = 'HOSTILE';
 
+exports.WINSTATUS = {};
+exports.WINSTATUS.WINNING_HARD = 'WINNING_HARD';
+exports.WINSTATUS.WINNING = 'WINNING';
+exports.WINSTATUS.EQUAL = 'EQUAL';
+exports.WINSTATUS.LOSING = 'LOSING';
+exports.WINSTATUS.LOSING_HARD = 'LOSING_HARD';
+
+exports.GAMESTATUS = {};
+exports.GAMESTATUS.EARLY = 'EARLY';
+exports.GAMESTATUS.MID = 'MID';
+exports.GAMESTATUS.LATE = 'LATE';
+
 exports.crash = function(message){
 	throw new Error(message);
 };

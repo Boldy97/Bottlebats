@@ -1,67 +1,59 @@
-const Utilities = require('../classes/Utilities');
+const fs = require('fs');
 
-function printSVG(W,H,P,L){
-	console.log(`<svg style='width:100%;height:auto' viewBox='-1 -1 ${W+1} ${H+1}'>`);
-	for(let i=0;i<P.length;i++)
-		console.log(`<circle fill='black' r='1.5' cx='${P[i].x}'' cy='${P[i].y}'/>`);
-	for(let i=0;i<L.length;i++)
-		for(let j=0;j<L[i].length;j++)
-			console.log(`<line stroke='red' stroke-width='0.1' stroke-linecap='round' x1='${P[i].x}' y1='${P[i].y}' x2='${P[L[i][j]].x}' y2='${P[L[i][j]].y}' />`);
-	for(let i=0;i<P.length;i++)
-		/*console.log(`<text fill='white' font-size='1' x='${P[i].x}' y='${P[i].y}'>${i}</text>`);*/
-	console.log('</svg>');
-}
+String.prototype.replaceAll = function(search,replacement){
+    var target = this;
+    return target.replace(new RegExp(search,'g'),replacement);
+};
+let bot1 = 'BotElite1';
+let bot2 = 'BotElite0';
+let history0 = JSON.parse(fs.readFileSync(__dirname+'\\'+bot1+' vs '+bot2+'.json').toString());
+//let history1 = JSON.parse(fs.readFileSync(__dirname+'\\BotElite1 vs BotHard.json').toString());
 
-function printTable(T){
-	for(let i=0;i<80;i++)
-		process.stdout.write('-');
-	for(let i=0;i<T.length;i++){
-		for(let j=0;j<T[i].length;j++)
-			process.stdout.write(i+','+j+','+Math.floor(T[i][j])+'\t');
-		console.log();
-	}
-
-	for(let i=0;i<80;i++)
-		process.stdout.write('-');
-}
-
-let N = 400; // number
-let P = []; // points
-let D = []; // distances
-let DC = []; // distance copy
-let L = []; // links
-// time
-let start = Date.now();
-// populate graphs
-for(let i=0;i<N;i++)
-	P.push({x:Math.random()*N,y:Math.random()*N});
-// distances
-for(let i=0;i<N;i++){
-	D[i] = [];
-	DC[i] = [];
-}
-for(let i=0;i<N;i++)
-	for(let j=0;j<i;j++)
-		D[i][j] = D[j][i] = DC[i][j] = DC[j][i] = Utilities.getDistance(P[i],P[j]);
-// floyd-warshall
-for(let k=0;k<N;k++)
-	for(let i=0;i<N;i++)
-		for(let j=0;j<i;j++)
-			if(D[i][j] > D[i][k] + D[k][j])
-				D[i][j] = D[i][k] + D[k][j];
-// links
-for(let i=0;i<N;i++){
-	L[i] = [];
-	for(let j=0;j<i;j++)
-		if(D[i][j] === DC[i][j]){
-			L[i].push(j);
+let wins = [0,0];
+let draws = 0;
+for(let i=0;i<20;i++){
+	for(let j=0;j<i;j++){
+		/*let difference = history0[i][j].winners.length !== history0[j][i].winners.length;
+		if(!difference && history0[i][j].winners.length === 1)
+			difference = (JSON.stringify(history0[i][j].winners) === JSON.stringify(history0[j][i].winners));
+		if(difference){
+			console.log(`bij ${JSON.stringify(history0[i][j].startpositions)} won in (${history0[i][j].length}) ${history0[i][j].winners}`);
+			console.log(`bij ${JSON.stringify(history0[j][i].startpositions)} won in (${history0[j][i].length}) ${history0[j][i].winners}`);
+			console.log();
+		}*/
+		/*if(history0[i][j].winners.length === 1 && history0[i][j].winners.includes(bot2))
+			console.log(i+','+j);*/
+		if(history0[i][j].winners.length === 1){
+			if(history0[i][j].winners.includes(bot1))
+				wins[0]++;
+			if(history0[i][j].winners.includes(bot2))
+				wins[1]++;
+		} else {
+			draws++;
 		}
+		if(history0[j][i].winners.length === 1){
+			if(history0[j][i].winners.includes(bot1))
+				wins[0]++;
+			if(history0[j][i].winners.includes(bot2))
+				wins[1]++;
+		} else {
+			draws++;
+		}
+	}
 }
-// time
-console.log(Date.now()-start);
+console.log(`${bot1} vs ${bot2}`);
+console.log(`wins: ${wins}`);
+console.log(`draws: ${draws}`);
+console.log(`winrate: ${Math.floor(10000*wins[0]/(wins[0]+wins[1]))/100}%`);
 
-/*printTable(DC);
-printTable(D);*/
-//printTable(L);
-
-printSVG(N,N,P,L);
+/*for(let i=0;i<20;i++){
+	for(let j=0;j<20;j++){
+		if(history0[i][j] === null || history1[i][j] === null)
+			continue;
+		if(JSON.stringify(history0[i][j].winners).replaceAll('BotElite0','BotElite') !== JSON.stringify(history1[i][j].winners).replaceAll('BotElite1','BotElite')){
+			console.log(`bij ${JSON.stringify(history0[i][j].startpositions)} won ${history0[i][j].winners}`);
+			console.log(`bij ${JSON.stringify(history1[i][j].startpositions)} won ${history1[i][j].winners}`);
+			console.log();
+		}
+	}
+}*/

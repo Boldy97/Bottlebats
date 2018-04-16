@@ -11,30 +11,33 @@ module.exports = class Future {
 			this.player = planet.player;
 			this.ships = planet.ships;
 		}
-
-		if(moves.length > 0)
-			this.fight(moves);
+		this.armies = this.getArmies(moves);
+		this.fight();
 	}
 
-	fight(moves){
-		let armies = moves.reduce((armies,move) => {
+	// Gives an array of armies, where each army has a player and ships
+	// result is ordered by the amount of ships, decreasing
+	getArmies(moves){
+		return moves.reduce((armies,move) => {
 			let army = armies.find(army => army.player.name === move.player.name);
 			if(army === undefined)
 				armies.push(army = {
 					player: move.player,
 					ships: 0,
 				});
-			army.ships += move.ships
+			army.ships += move.ships;
 			return armies;
-		},[this]).sort((a,b) => b.ships - a.ships);
+		},[{player:this.player,ships:this.ships}]).sort((a,b) => b.ships - a.ships);
+	}
 
-		if(armies.length > 1)
-			armies[0].ships -= armies[1].ships;
-		if(armies[0].ships === 0)
-			armies[0].player = this.player.state.getPlayer(this.player.state.neutralname);
-
-		this.player = armies[0].player;
-		this.ships = armies[0].ships;
+	fight(){
+		this.player = this.armies[0].player;
+		this.ships = this.armies[0].ships;
+		if(this.armies.length>1){
+			this.ships -= this.armies[1].ships;
+			if(this.ships === 0)
+				this.player = this.player.state.getPlayer(this.player.state.neutralname);
+		}
 	}
 
 }

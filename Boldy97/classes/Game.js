@@ -3,46 +3,100 @@
 const fs = require('fs');
 const Utils = require('./Utils');
 const BotDead = require('../bots/BotDead');
-const BotSimple = require('../bots/BotSimple');
+const BotEasy = require('../bots/BotEasy');
 const BotMedium = require('../bots/BotMedium');
 const BotHard = require('../bots/BotHard');
+const BotElite = require('../bots/BotElite');
 //const BotQuinten = require('../../QuintenDV/testBot');
-const MessageReserved = require('./messages/MessageReserved');
-const MessageRequested = require('./messages/MessageRequested');
 
 function start(){
-	//playOne();
-	playMultiple();
+	playOne(BotElite1,BotHard);
+	//playMultiple(BotElite0,BotHard);
+	//playAllLarge(BotElite0,BotHard);
+	//playAllLarge(BotElite1,BotHard);
+	//playAllLarge(BotElite1,BotElite0);
 }
 
-function playOne(){
-	new Game(1,null,true,
-		new BotMedium(1,null),
-		new BotHard(1,null),
+function playOne(bot1,bot2){
+	new Game(1,0,true,
+		Game.mapLarge,
+		[12,11],
+		new bot1(1,0),
+		new bot2(1,0),
 		//new AdapterQuinten(),
-	).execute()
+	).execute();
 }
 
-function playMultiple(){
-	let wins = [0,0];
-	let draws = [0,0];
-	for(let i=0;i<100;i++){
-		let players = new Game(1,null,false,
-			new BotMedium(1,null),
-			new BotHard(1,null),
+function playMultiple(bot1,bot2){
+	let wins = {};
+	let draws = {};
+	wins[bot1.name] = 0;
+	wins[bot2.name] = 0;
+	draws[bot1.name] = 0;
+	draws[bot2.name] = 0;
+	for(let i=0;i<10;i++){
+		let players = new Game(1,0,false,
+			Game.mapLarge,
+			undefined,
+			new bot1(1,0),
+			new bot2(1,0),
 		).execute();
-		if(players.size === 1)
-			wins[players.values().next().value-2]++;
-		if(players.size > 1){
-			let values = players.values();
-			for(let i=0;i<players.size;i++)
-				draws[values.next().value-2]++;
+		if(players.length === 1)
+			wins[players[0]]++;
+		if(players.length > 1)
+			for(let i=0;i<players.length;i++)
+				draws[players[i]]++;
+	}
+	console.log('wins:');
+	console.log(wins);
+	console.log('draws:');
+	console.log(draws);
+}
+
+function playAllLarge(bot1,bot2){
+	let wins = {};
+	let draws = {};
+	wins[bot1.name] = 0;
+	wins[bot2.name] = 0;
+	draws[bot1.name] = 0;
+	draws[bot2.name] = 0;
+	let history = [];
+	for(let i=0;i<20;i++){
+		history[i] = [];
+		console.log(20*i+'/400');
+		for(let j=0;j<20;j++){
+			history[i][j] = null;
+			if(i === j)
+				continue;
+			let game = new Game(1,0,false,
+				Game.mapLarge,
+				[i,j],
+				new bot1(1,0),
+				new bot2(1,0),
+			);
+			// get winner(s)
+			let players = game.execute();
+			if(players.length === 1)
+				wins[players[0]]++;
+			if(players.length > 1)
+				for(let i=0;i<players.length;i++)
+					draws[players[i]]++;
+			let startpositions = {};
+			startpositions[bot1.name] = i;
+			startpositions[bot2.name] = j;
+			history[i][j] = {
+				winners: players,
+				length: game.history.length,
+				startpositions: startpositions,
+			};
 		}
 	}
 	console.log('wins:');
 	console.log(wins);
 	console.log('draws:');
 	console.log(draws);
+	let file = fs.openSync(__dirname+'\\..\\temp\\'+bot1.name+' vs '+bot2.name+'.json','w');
+	fs.writeSync(file,JSON.stringify(history,null,'\t'));
 }
 
 class Adapter {
@@ -71,34 +125,36 @@ class AdapterQuinten {
 
 class Game {
 
-	constructor(ownername,neutralname,giveoutput,...bots){
+	constructor(ownername,neutralname,giveoutput,mapper,custompositions,...bots){
 		this.ownername = ownername;
 		this.neutralname = neutralname;
 		this.giveoutput = giveoutput;
+		this.map = mapper();
 		this.bots = [undefined,new BotDead(ownername,neutralname),...bots];
 		this.id = 0;
 		this.state = {planets:[],expeditions:[]};
 		this.history = [];
-		this.init();
+		this.init(custompositions);
+		this.file;
 	}
 
-	init(){
-		let map = this.getMapLarge();
-		//let map = this.getMapSquare(5,20);
-		for(let planet of map.planets){
+	init(custompositions){
+		for(let planet of this.map.planets){
 			planet.owner = this.neutralname;
 			this.state.planets.push(planet);
 		}
 		for(let i=2;i<this.bots.length;i++)
-			this.state.planets[map.spots[i-2]].owner = i;
+			if(custompositions === undefined)
+				this.state.planets[this.map.spots[i-2]].owner = i;
+			else
+				this.state.planets[custompositions[i-2]].owner = i;
 		this.processMoves([]);
 	}
 
-	getMapLarge(){
+	static mapLarge(){
 		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\games\\large.json').toString().split('\n')[0]);
 		result.spots = [];
 		result.planets.forEach((planet,i) => {
-			planet.owner = this.neutralname;
 			planet.ship_count = 5;
 			result.spots.push(i);
 		});
@@ -106,7 +162,18 @@ class Game {
 		return result;
 	}
 
-	getMapSquare(dim,dist){
+	static mapHex(){
+		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\games\\hex.json').toString().split('\n')[0]);
+		result.spots = [];
+		result.planets.forEach((planet,i) => {
+			planet.ship_count = 5;
+			result.spots.push(i);
+		});
+		Utils.shuffle(result.spots);
+		return result;
+	}
+
+	static mapSquare(dim,dist){
 		let result = {planets:[],spots:[0,dim*dim-1,dim-1,dim*(dim-1)]};
 		for(let i=0;i<dim;i++)
 			for(let j=0;j<dim;j++)
@@ -120,12 +187,15 @@ class Game {
 	}
 
 	getPlayersRemaining(){
-		let players = new Set();
-		for(let planets of this.state.planets)
-			players.add(planets.owner);
+		let players = [];
+		for(let planet of this.state.planets)
+			if(planet.owner !== this.neutralname)
+				if(!players.includes(this.bots[planet.owner].constructor.name))
+					players.push(this.bots[planet.owner].constructor.name);
 		for(let move of this.state.expeditions)
-			players.add(move.owner);
-		players.delete(this.neutralname);
+			if(move.owner !== this.neutralname)
+				if(!players.includes(this.bots[move.owner].constructor.name))
+					players.push(this.bots[move.owner].constructor.name);
 		return players;
 	}
 
@@ -150,26 +220,27 @@ class Game {
 			this.bots[i].processData(state);
 		}
 		//TODO remove
-		this.bots[3].state.planets.forEach(planet => {
-			this.state.planets.find(planet2 => planet2.name === planet.name).meta =
-			{
-				reserved:planet.getValue(MessageReserved),
-				links:planet.links.map(link => {
-					return {
-						from:link.from.name,
-						to:link.to.name,
-						turns:link.turns,
-					};
-				}),
-				messages:planet.messages.map(message => {
-					return {
-						name:message.constructor.name,
-						from:message.from.name,
-						to:message.to.name,
-						value:message.value
-					};
-				}),
-			};
+		this.bots[2].state.planets.forEach(planet => {
+			if(planet.messages){
+				this.state.planets.find(planet2 => planet2.name === planet.name).meta = {
+					values:planet.values,
+					links:planet.links.map(link => {
+						return {
+							from:link.from.name,
+							to:link.to.name,
+							turns:link.turns,
+						};
+					}),
+					messages:planet.messages.map(message => {
+						return {
+							name:message.constructor.name,
+							from:message.from.name,
+							to:message.to.name,
+							value:message.value
+						};
+					}),
+				};
+			}
 		});
 	}
 
@@ -184,6 +255,11 @@ class Game {
 	}
 
 	processMoves(moves){
+		for(let move of moves){
+			let origin = this.state.planets.find(planet => planet.name === move.origin);
+			if(typeof move.ship_count !== 'number' || move.ship_count < 0 || move.ship_count > origin.ship_count)
+				Utils.crash(`Invalid shipcount for move ${JSON.stringify(move)}\n${origin.ship_count} available`);
+		}
 		for(let move of moves)
 			move.id = this.id++;
 		for(let move of moves){
@@ -199,18 +275,29 @@ class Game {
 	}
 
 	execute(){
-		while(this.getPlayersRemaining().size > 1 && this.history.length < 500){
-			this.passStateToBots();
-			this.processMoves(this.getMoves());
-		}
 		if(this.giveoutput)
-			this.writeHistoryToFile();
+			this.writeHistoryPre();
+		try{
+			while(this.getPlayersRemaining().length > 1 && this.history.length < 500){
+				this.passStateToBots();
+				if(this.giveoutput)
+					this.writeHistoryState(this.state);
+				this.processMoves(this.getMoves());
+			}
+		} catch(e){
+			if(this.giveoutput)
+				this.writeHistoryPost();
+			throw e;
+		}
+		if(this.giveoutput){
+			this.writeHistoryState(this.state);
+			this.writeHistoryPost();
+		}
 		return this.getPlayersRemaining();
 	}
 
-	writeHistoryToFile(){
-		console.log(this.history.length);
-		let file = fs.openSync(__dirname+'\\..\\temp\\output.html','w');
+	writeHistoryPre(){
+		this.file = fs.openSync(__dirname+'\\..\\temp\\output.html','w');
 
 		let dims = {
 			x:[Infinity,-Infinity],
@@ -226,12 +313,13 @@ class Game {
 			if(planet.y > dims.y[1])
 				dims.y[1] = planet.y;
 		});
-		fs.writeSync(file,`
+
+		fs.writeSync(this.file,`
 			<html><body>
 			<textarea id='menu' rows='20' cols='50' required></textarea>
 			<div id='controls'>
 				<span>Turn:</span>
-				<input id='turnSlider' type='range' min='0' max='${this.history.length-1}' value='0'>
+				<input id='turnSlider' type='range' min='0' max='0' value='0'>
 				<br>
 				<button id='previousButton'>Previous</button>
 				<button id='nextButton'>Next</button>
@@ -245,14 +333,14 @@ class Game {
 			<svg viewBox='${dims.x[0]-1} ${dims.y[0]-1} ${dims.x[1]-dims.x[0]+2} ${dims.y[1]-dims.y[0]+2}'>
 		`);
 		this.state.planets.forEach(planet => {
-			fs.writeSync(file,`
+			fs.writeSync(this.file,`
 				<circle class='planet' id='planet_${planet.name}' r='1' stroke-width='0.1' stroke='white' cx='${planet.x}' cy='${planet.y}'/>
 				<text id='planet_ships_${planet.name}' fill='white' stroke='none' font-size='1.5' x='${planet.x-0.5}'' y='${planet.y+0.5}'/>
-				`);
+			`);
 		});
-		fs.writeSync(file,'</svg>');
 
-		fs.writeSync(file,`
+		fs.writeSync(this.file,`
+			</svg>
 			<style>
 				body {
 					background-color: black;
@@ -288,6 +376,8 @@ class Game {
 			</style>
 			<script>
 				function redraw(){
+					//sliders
+					window.turnSlider.setAttribute('max',turns.length);
 					//planets
 					for(let planet of turns[turn].planets){
 						window['planet_ships_'+planet.name].innerHTML = planet.ship_count;
@@ -371,8 +461,8 @@ class Game {
 				let turn = 0;
 				let delay = 1000;
 				let colors = [
-					'#ffffff', //White
 					'#000000', //Black
+					'#ffffff', //White
 					'#e6194b', //Red
 					'#3cb44b', //Green
 					'#ffe119', //Yellow
@@ -394,9 +484,17 @@ class Game {
 					'#000080', //Navy
 					'#808080', //Grey
 				];
-				let turns = 
+				let turns = [
 		`);
-		fs.writeSync(file,JSON.stringify(this.history)+';redraw();</script></body></html>');
+	}
+
+	writeHistoryState(state){
+		fs.writeSync(this.file,JSON.stringify(state)+',');
+	}
+
+	writeHistoryPost(){
+		console.log(this.history.length);
+		fs.writeSync(this.file,'];redraw();</script></body></html>');
 	}
 
 }

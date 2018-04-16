@@ -12,6 +12,7 @@ module.exports = class State {
 		this.Link = Link;
 		this.ownername = ownername;
 		this.neutralname = neutralname;
+		this.turn = 0;
 		this.players = [];
 		this.planets = [];
 		this.moves = [];
@@ -94,6 +95,7 @@ module.exports = class State {
 	}
 
 	processTurn(){
+		this.turn++;
 		this.planets.forEach(planet => {
 			planet.processTurn();
 		});
@@ -144,23 +146,23 @@ module.exports = class State {
 		if(data.expeditions.length !== this.moves.length){
 			console.log(this.moves.length);
 			console.log(this.moves);
-			throw 'moves size mismatch. is '+this.moves.length+' should be '+data.expeditions.length;
+			throw this.turn+' moves size mismatch. is '+this.moves.length+' should be '+data.expeditions.length;
 		}
 		for(let move of data.expeditions){
 			let move2 = this.getMove(move.id);
 			if(move2 === undefined)
-				throw 'no id '+move.id;
+				throw this.turn+' no id '+move.id;
 		}
 		if(data.planets.length !== this.planets.length)
-			throw 'planets size mismatch';
+			throw this.turn+' planets size mismatch';
 		for(let planet of data.planets){
 			let planet2 = this.getPlanet(planet.name);
 			if(planet2 === undefined)
-				throw 'no planet '+planet.name;
+				throw this.turn+' no planet '+planet.name;
 			if(planet.owner !== planet2.player.name)
-				throw `player mismatch @ ${planet2.name} is ${planet2.player.name} should be ${planet.owner}`;
+				throw `${this.turn} player mismatch @ ${planet2.name} is ${planet2.player.name} should be ${planet.owner}`;
 			if(planet.ship_count !== planet2.ships)
-				throw new Error(`ships mismatch @ ${planet2.name} is ${planet2.ships} should be ${planet.ship_count}`);
+				throw new Error(`${this.turn} ships mismatch @ ${planet2.name} is ${planet2.ships} should be ${planet.ship_count}`);
 		}
 	}
 

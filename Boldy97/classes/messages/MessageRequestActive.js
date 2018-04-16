@@ -1,27 +1,30 @@
 'use strict'
 
 const Utils = require('../Utils');
-const MessageLocal = require('./MessageLocal');
+const Message = require('./Message');
+const MessageRequestPassive = require('./MessageRequestPassive');
 
-module.exports = class MessageRequested extends MessageLocal {
+module.exports = class MessageRequestActive extends Message { // TODO use MessageRequestPassive
 
-	reduce(messages){
-		return messages.reduce((result,message) => {
-			for(let i=0;i<message.value.length;i++)
-				result[i] = (result[i]||0)+message.value[i];
-			return result;
-		},[0]);
+	static getRoutes(planet){
+		return this.getRoutesNone(planet);
 	}
 
 	static getDefaultValue(){
 		return [0];
 	}
 
+	reduce(messages){
+		return this.reduceFirst(messages);
+	}
+
 	// index = turns in the future
 	// value = armies that need to be sent by that turn to defend the planet from all attacks
 	static get(planet){
 		// if not an allied planet, not applicable
-		if(planet.player.type !== Utils.TYPES.ALLIED) // TODO also calculate requested if planet with incoming allied attacks?
+		/*if(planet.player.type !== Utils.TYPES.ALLIED && planet.moves_in.every(move => move.player.type !== Utils.TYPES.ALLIED))
+			return;*/
+		if(planet.moves_in.length === 0)
 			return;
 		// if no incoming enemy attacks, request 0
 		if(!planet.moves_in.find(move => move.player.type === Utils.TYPES.HOSTILE))
@@ -32,10 +35,21 @@ module.exports = class MessageRequested extends MessageLocal {
 		planet.moves_in.sort((a,b) => a.turns!==b.turns ? a.turns-b.turns : a.player.type.localeCompare(b.player.type));
 		let ships = planet.ships;
 		let lastturns = 0;
+		let owned = planet.player.type === Utils.TYPES.ALLIED;
 		planet.moves_in.forEach(move => {
 			// make requested array long enough
 			for(let i=requested.length;i<=move.turns;i++)
 				requested[i] = 0;
+			// check if planet was ours atleast once
+			if(!owned){
+				let future = planet.getFuture(move.turns);
+				if(future.player.type === Utils.TYPES.ALLIED){
+					owned = true;
+					ships = future.ships;
+					lastturns = move.turns;
+				}
+				return;
+			}
 			// planet is ours at turn (move.turns) with (ships+move.turns-lastturns) ships
 			ships += move.turns-lastturns;
 			lastturns = move.turns;
