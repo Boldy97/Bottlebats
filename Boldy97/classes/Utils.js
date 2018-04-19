@@ -32,7 +32,6 @@ exports.isSorted = function(array,sorter){
 	return true;
 }
 
-
 exports.shuffle = function(a) {
     var j, x, i;
     for (i = a.length - 1; i > 0; i--) {

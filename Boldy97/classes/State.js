@@ -144,8 +144,6 @@ module.exports = class State {
 	check(data){ // TODO remove
 
 		if(data.expeditions.length !== this.moves.length){
-			console.log(this.moves.length);
-			console.log(this.moves);
 			throw this.turn+' moves size mismatch. is '+this.moves.length+' should be '+data.expeditions.length;
 		}
 		for(let move of data.expeditions){

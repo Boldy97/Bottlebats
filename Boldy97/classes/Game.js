@@ -1,6 +1,7 @@
 'use strict'
 
 const fs = require('fs');
+const { spawn } = require('child_process');
 const Utils = require('./Utils');
 const BotDead = require('../bots/BotDead');
 const BotEasy = require('../bots/BotEasy');
@@ -9,128 +10,312 @@ const BotHard = require('../bots/BotHard');
 const BotElite = require('../bots/BotElite');
 //const BotQuinten = require('../../QuintenDV/testBot');
 
+
 function start(){
-	playOne(BotElite1,BotHard);
-	//playMultiple(BotElite0,BotHard);
-	//playAllLarge(BotElite0,BotHard);
-	//playAllLarge(BotElite1,BotHard);
-	//playAllLarge(BotElite1,BotElite0);
+	//playOne(500,AdapterRobinElite,AdapterGoogleIkhramts);
+	//playOne(500,AdapterRobinMedium,AdapterRobinEasy);
+	//playOne(500,new AdapterRobin(BotElite),new AdapterGoogleDefault(1));
+	//playOne(500,new AdapterRobin(BotMedium),new AdapterRobin(BotEasy));
+	playAllLarge(500,AdapterRobinElite,AdapterGoogleIkhramts);
+	//playAllLarge(500,AdapterRobinElite,AdapterRobinDead);
 }
 
-function playOne(bot1,bot2){
-	new Game(1,0,true,
+function playOne(turnlimit,bot1,bot2){
+	let game = new Game(1,0,turnlimit,true,
 		Game.mapLarge,
-		[12,11],
-		new bot1(1,0),
-		new bot2(1,0),
-		//new AdapterQuinten(),
-	).execute();
+		//Game.mapSquare.bind(null,6,3),
+		undefined,//[11,12],
+		bot1,bot2,
+	);
+	game.execute(players => {
+		console.log('winners: '+players.toString());
+		console.log('game length: '+game.history.length);
+	});
 }
 
-function playMultiple(bot1,bot2){
+function playMultiple(turnlimit,bot1,bot2){
 	let wins = {};
 	let draws = {};
 	wins[bot1.name] = 0;
 	wins[bot2.name] = 0;
 	draws[bot1.name] = 0;
 	draws[bot2.name] = 0;
-	for(let i=0;i<10;i++){
-		let players = new Game(1,0,false,
+	let done = 0;
+	let total = 10;
+	for(let i=0;i<total;i++){
+		new Game(1,0,turnlimit,false,
 			Game.mapLarge,
 			undefined,
-			new bot1(1,0),
-			new bot2(1,0),
-		).execute();
-		if(players.length === 1)
-			wins[players[0]]++;
-		if(players.length > 1)
-			for(let i=0;i<players.length;i++)
-				draws[players[i]]++;
-	}
-	console.log('wins:');
-	console.log(wins);
-	console.log('draws:');
-	console.log(draws);
-}
-
-function playAllLarge(bot1,bot2){
-	let wins = {};
-	let draws = {};
-	wins[bot1.name] = 0;
-	wins[bot2.name] = 0;
-	draws[bot1.name] = 0;
-	draws[bot2.name] = 0;
-	let history = [];
-	for(let i=0;i<20;i++){
-		history[i] = [];
-		console.log(20*i+'/400');
-		for(let j=0;j<20;j++){
-			history[i][j] = null;
-			if(i === j)
-				continue;
-			let game = new Game(1,0,false,
-				Game.mapLarge,
-				[i,j],
-				new bot1(1,0),
-				new bot2(1,0),
-			);
-			// get winner(s)
-			let players = game.execute();
+			bot1,bot2,
+		).execute(players => {
 			if(players.length === 1)
 				wins[players[0]]++;
 			if(players.length > 1)
 				for(let i=0;i<players.length;i++)
 					draws[players[i]]++;
-			let startpositions = {};
-			startpositions[bot1.name] = i;
-			startpositions[bot2.name] = j;
-			history[i][j] = {
+			done++;
+			if(done === total){
+				console.log('wins:');
+				console.log(wins);
+				console.log('draws:');
+				console.log(draws);
+			}
+		});
+	}
+}
+
+function playAllLarge(turnlimit,bot1,bot2){
+	let wins = {};
+	let draws = {};
+	wins[bot1.getName()] = 0;
+	wins[bot2.getName()] = 0;
+	draws[bot1.getName()] = 0;
+	draws[bot2.getName()] = 0;
+	let startpositions = [];
+	let history = [];
+	for(let i=0;i<20;i++)
+		for(let j=0;j<20;j++)
+			if(i!==j)
+				startpositions.push([i,j]);
+	let done = 0;
+	let total = startpositions.length;
+	let doGame = function(startposition){
+		let game = new Game(1,0,turnlimit,false,
+			Game.mapLarge,
+			startposition,
+			bot1,bot2,
+		);
+		game.execute(((start1,start2,players) => {
+			if(players.length === 1)
+				wins[players[0]]++;
+			if(players.length > 1)
+				for(let i=0;i<players.length;i++)
+					draws[players[i]]++;
+			let starts = {};
+			starts[bot1.getName()] = start1;
+			starts[bot2.getName()] = start2;
+			history.push({
 				winners: players,
 				length: game.history.length,
-				startpositions: startpositions,
-			};
-		}
+				startpositions: starts,
+			});
+
+			done++;
+			if(done%1===0)
+				console.log(done+'/'+total);
+			if(done === total){
+				console.log('wins:');
+				console.log(wins);
+				console.log('draws:');
+				console.log(draws);
+				let file = fs.openSync(__dirname+'\\..\\temp\\'+bot1.getName()+' vs '+bot2.getName()+'.json','w');
+				fs.writeSync(file,JSON.stringify(history,null,'\t'));
+			} else if(startpositions.length){
+				setTimeout(doGame.bind(this,startpositions.pop()),1);
+			}
+		}).bind(this,startposition[0],startposition[1]));
 	}
-	console.log('wins:');
-	console.log(wins);
-	console.log('draws:');
-	console.log(draws);
-	let file = fs.openSync(__dirname+'\\..\\temp\\'+bot1.name+' vs '+bot2.name+'.json','w');
-	fs.writeSync(file,JSON.stringify(history,null,'\t'));
+	for(let i=0;i<5;i++)
+		doGame(startpositions.pop());
 }
 
 class Adapter {
+
+	constructor(ownername,neutralname){
+		this.ownername = ownername;
+		this.neutralname = neutralname;
+	}
+
+	static getName(){
+		throw 'Must implement method getName in '+this;
+	}
 
 	processData(data){
 		throw 'Must implement method processData in '+this;
 	}
 
-	getMoves(){
+	getMoves(callback){
 		throw 'Must implement method getMoves in '+this;
+	}
+
+	exit(){
+		
 	}
 }
 
-class AdapterQuinten {
+class AdapterRobin extends Adapter {
+
+	constructor(ownername,neutralname,Bot){
+		super(ownername,neutralname);
+		this.bot = new Bot(ownername,neutralname);
+	}
+
+	static getName(){
+		return 'Robin'+this.name.split('AdapterRobin')[1];
+	}
+
+	processData(data){
+		this.bot.processData(data);
+	}
+
+	getMoves(callback){
+		callback(this.bot.getMoves());
+	}
+}
+
+class AdapterRobinDead extends AdapterRobin {
+	constructor(ownername,neutralname){super(ownername,neutralname,BotDead);}
+}
+
+class AdapterRobinEasy extends AdapterRobin {
+	constructor(ownername,neutralname){super(ownername,neutralname,BotEasy);}
+}
+
+class AdapterRobinMedium extends AdapterRobin {
+	constructor(ownername,neutralname){super(ownername,neutralname,BotMedium);}
+}
+
+class AdapterRobinHard extends AdapterRobin {
+	constructor(ownername,neutralname){super(ownername,neutralname,BotHard);}
+}
+
+class AdapterRobinElite extends AdapterRobin {
+	constructor(ownername,neutralname){super(ownername,neutralname,BotElite);}
+}
+
+class AdapterQuinten extends Adapter {
+
+	static getName(){
+		return 'QBOT9000';
+	}
 
 	processData(data){
 		this.moves = BotQuinten.getMoves(JSON.stringify(data));
 	}
 
-	getMoves(){
-		return this.moves;
+	getMoves(callback){
+		callback(this.moves);
 	}
 }
 
-// TODO add adapters for other bots
+class AdapterGoogle extends Adapter {
+
+	constructor(ownername,neutralname,command){
+		super(ownername,neutralname);
+		let parts = command.split(' ');
+		this.bot = spawn(parts[0],parts.slice(1));
+		this.done = true;
+		this.callback = null;
+		this.bot.stdout.on('data',this.recieveData.bind(this));
+		this.bot.stderr.on('data',data => {
+			//console.log('Bot errored: '+data);
+		});
+		this.bot.on('close',(code)=>{
+			//console.log('Bot closed with code: '+code);
+		});
+		this.distances = null;
+		this.planetnames = null;
+		this.moves = [];
+	}
+
+	processData(data){
+		this.done = false;
+		this.callback = null;
+		if(!this.distances){
+			this.distances = [];
+			this.planetnames = [];
+			for(let i=0;i<data.planets.length;i++){
+				this.planetnames[i] = data.planets[i].name;
+				this.distances[i] = [];
+				for(let j=0;j<data.planets.length;j++)
+					if(i!==j)
+						this.distances[i][j] = Math.ceil((data.planets[i].x-data.planets[j].x)*(data.planets[i].x-data.planets[j].x)+(data.planets[i].y-data.planets[j].y)*(data.planets[i].y-data.planets[j].y));
+			}
+		}
+		let text = '';
+		data.planets.forEach(planet => {
+			//this.bot.stdin.write(`P ${planet.x} ${planet.y} ${planet.owner} ${planet.ship_count} 1\n`);
+			text += `P ${planet.x} ${planet.y} ${planet.owner} ${planet.ship_count} 1\n`;
+		});
+		data.expeditions.forEach(move => {
+			let start = data.planets.findIndex(planet => planet.name === move.origin);
+			let end = data.planets.findIndex(planet => planet.name === move.destination);
+			this.bot.stdin.write(`F ${move.owner} ${move.ship_count} ${start} ${end} ${move.turns_remaining} ${move.turns_remaining}\n`);
+			text += `F ${move.owner} ${move.ship_count} ${start} ${end} ${this.distances[start][end]} ${move.turns_remaining}\n`;
+		});
+		text += 'go\n';
+		this.bot.stdin.write(text);
+	}
+
+	recieveData(data){
+		data = data.toString().split('\n');
+		for(let line of data){
+			line = line.trim();
+			if(line.includes('go')){
+				this.done = true;
+				this.submitMoves();
+				return;
+			}
+			let move = line.split(' ');
+			//console.log('Bot gave move: ',move);
+			if(move.length !== 3)
+				continue;
+			this.moves.push({
+				origin: this.planetnames[parseInt(move[0])],
+				destination: this.planetnames[parseInt(move[1])],
+				ship_count: parseInt(move[2]),
+			});
+		}
+	}
+
+	getMoves(callback){
+		this.callback = callback;
+		this.submitMoves();
+	}
+
+	exit(){
+		this.bot.kill();
+	}
+
+	submitMoves(){
+		if(!this.done || !this.callback)
+			return;
+		this.callback(this.moves);
+		this.moves = [];
+	}
+
+}
+
+
+class AdapterGoogleDefault extends AdapterGoogle {
+	constructor(ownername,neutralname,index){
+		let googlebots = ['Bully','Dual','Prospector','Rage','Random'];
+		super(ownername,neutralname,'java -jar ./bots/google/google/'+googlebots[index]+'Bot.jar');
+	}
+	static getName(){return 'Google';}
+}
+
+class AdapterGoogleMrcarlosrendon extends AdapterGoogle {
+	constructor(ownername,neutralname){super(ownername,neutralname,'python ./bots/google/mrcarlosrendon/MyBot.py');}
+	static getName(){return 'mrcarlosrendon';}
+}
+
+class AdapterGoogleIkhramts extends AdapterGoogle {
+	constructor(ownername,neutralname){super(ownername,neutralname,'./bots/google/ikhramts/MyBot.exe');}
+	static getName(){return 'ikhramts';}
+}
 
 class Game {
 
-	constructor(ownername,neutralname,giveoutput,mapper,custompositions,...bots){
+	constructor(ownername,neutralname,turnlimit,giveoutput,mapper,custompositions,...bots){
 		this.ownername = ownername;
 		this.neutralname = neutralname;
+		this.turnlimit = turnlimit;
 		this.giveoutput = giveoutput;
 		this.map = mapper();
 		this.bots = [undefined,new BotDead(ownername,neutralname),...bots];
+		for(let i=2;i<this.bots.length;i++)
+			this.bots[i] = new this.bots[i](ownername,neutralname);
 		this.id = 0;
 		this.state = {planets:[],expeditions:[]};
 		this.history = [];
@@ -189,13 +374,17 @@ class Game {
 	getPlayersRemaining(){
 		let players = [];
 		for(let planet of this.state.planets)
-			if(planet.owner !== this.neutralname)
-				if(!players.includes(this.bots[planet.owner].constructor.name))
-					players.push(this.bots[planet.owner].constructor.name);
+			if(planet.owner !== this.neutralname){
+				let name = this.bots[planet.owner].constructor.getName();
+				if(!players.includes(name))
+					players.push(name);
+			}
 		for(let move of this.state.expeditions)
-			if(move.owner !== this.neutralname)
-				if(!players.includes(this.bots[move.owner].constructor.name))
-					players.push(this.bots[move.owner].constructor.name);
+			if(move.owner !== this.neutralname){
+				let name = this.bots[move.owner].constructor.getName();
+				if(!players.includes(name))
+					players.push(name);
+			}
 		return players;
 	}
 
@@ -219,47 +408,63 @@ class Game {
 			});
 			this.bots[i].processData(state);
 		}
-		//TODO remove
-		this.bots[2].state.planets.forEach(planet => {
-			if(planet.messages){
-				this.state.planets.find(planet2 => planet2.name === planet.name).meta = {
-					values:planet.values,
-					links:planet.links.map(link => {
-						return {
-							from:link.from.name,
-							to:link.to.name,
-							turns:link.turns,
-						};
-					}),
-					messages:planet.messages.map(message => {
-						return {
-							name:message.constructor.name,
-							from:message.from.name,
-							to:message.to.name,
-							value:message.value
-						};
-					}),
-				};
-			}
-		});
+		if(this.bots[2].bot.state){
+			this.bots[2].bot.state.planets.forEach(planet => {
+				if(planet.messages){
+					this.state.planets.find(planet2 => planet2.name === planet.name).meta = {
+						values:planet.values,
+						links:planet.links.map(link => {
+							return {
+								from:link.from.name,
+								to:link.to.name,
+								turns:link.turns,
+							};
+						}),
+						messages:planet.messages.map(message => {
+							return {
+								name:message.constructor.name,
+								from:message.from.name,
+								to:message.to.name,
+								value:message.value
+							};
+						}),
+					};
+				}
+			});
+		}
+		// NEW
+		if(this.giveoutput)
+			this.writeHistoryState(this.state);
+		this.processMoves(this.getMoves());
 	}
 
 	getMoves(){
-		let moves = [];
+		let result = [];
+		result.status = {finished:false,count:0,total:this.bots.length-2};
 		for(let i=2;i<this.bots.length;i++){
-			let botmoves = this.bots[i].getMoves();
-			botmoves.forEach(move => move.owner = i);
-			moves = moves.concat(botmoves);
+			this.bots[i].getMoves(((botname,moves) => {
+				moves.forEach(move => {
+					move.owner = botname;
+					result.push(move);
+				});
+				result.status.count++;
+				if(result.status.count === result.status.total)
+					result.status.finished = true;
+			}).bind(this,i));
 		}
-		return moves;
+		return result;
 	}
 
 	processMoves(moves){
-		for(let move of moves){
+		if(moves.status && !moves.status.finished){
+			setTimeout(this.processMoves.bind(this,moves),10);
+			return;
+		}
+		/*for(let move of moves){
 			let origin = this.state.planets.find(planet => planet.name === move.origin);
 			if(typeof move.ship_count !== 'number' || move.ship_count < 0 || move.ship_count > origin.ship_count)
 				Utils.crash(`Invalid shipcount for move ${JSON.stringify(move)}\n${origin.ship_count} available`);
-		}
+		}*/
 		for(let move of moves)
 			move.id = this.id++;
 		for(let move of moves){
@@ -272,28 +477,34 @@ class Game {
 		this.bots[1].processData(this.state);
 		this.state = JSON.parse(this.bots[1].state.toJSON());
 		this.history.push(this.state);
+
+		// NEW
+		if(moves.status){
+			if(this.getPlayersRemaining().length > 1 && this.history.length < this.turnlimit)
+				this.passStateToBots();
+			else {
+				if(this.endgamecallback)
+					this.endgamecallback(this.getPlayersRemaining());
+				if(this.giveoutput)
+					this.writeHistoryPost();
+				for(let i=2;i<this.bots.length;i++)
+					this.bots[i].exit();
+			}
+		}
 	}
 
-	execute(){
+	execute(callback){
+		this.endgamecallback = callback;
 		if(this.giveoutput)
 			this.writeHistoryPre();
-		try{
-			while(this.getPlayersRemaining().length > 1 && this.history.length < 500){
+		try {
+			if(this.getPlayersRemaining().length > 1 && this.history.length < this.turnlimit)
 				this.passStateToBots();
-				if(this.giveoutput)
-					this.writeHistoryState(this.state);
-				this.processMoves(this.getMoves());
-			}
 		} catch(e){
 			if(this.giveoutput)
 				this.writeHistoryPost();
 			throw e;
 		}
-		if(this.giveoutput){
-			this.writeHistoryState(this.state);
-			this.writeHistoryPost();
-		}
-		return this.getPlayersRemaining();
 	}
 
 	writeHistoryPre(){
@@ -493,7 +704,6 @@ class Game {
 	}
 
 	writeHistoryPost(){
-		console.log(this.history.length);
 		fs.writeSync(this.file,'];redraw();</script></body></html>');
 	}
 
