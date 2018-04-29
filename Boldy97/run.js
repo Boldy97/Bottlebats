@@ -15,8 +15,6 @@ const BOTS = validBots.reduce((acc,val) => {
 
 /* Libraries */
 
-const fs = require('fs');
-const fd = fs.openSync(__dirname+'\\temp\\output.json','w');
 const readline = require('readline').createInterface({
 	input: process.stdin,
 	output: process.stdout,
@@ -40,8 +38,6 @@ const readline = require('readline').createInterface({
 			}));
 			//bot.getMoves();
 			//Timer.step();
-			if(false) // Toggle output.json
-				fs.writeSync(fd,data+'\n');
 		}).bind(undefined,new BOTS[botname](1,null))
 	);
 })();

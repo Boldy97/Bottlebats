@@ -12,11 +12,11 @@ const BotElite = require('../bots/BotElite');
 
 
 function start(){
-	//playOne(500,AdapterRobinElite,AdapterGoogleIkhramts);
+	playOne(500,AdapterRobinElite,AdapterGoogleIkhramts);
 	//playOne(500,AdapterRobinMedium,AdapterRobinEasy);
 	//playOne(500,new AdapterRobin(BotElite),new AdapterGoogleDefault(1));
 	//playOne(500,new AdapterRobin(BotMedium),new AdapterRobin(BotEasy));
-	playAllLarge(500,AdapterRobinElite,AdapterGoogleIkhramts);
+	//playAllLarge(500,AdapterRobinElite,AdapterGoogleIkhramts);
 	//playAllLarge(500,AdapterRobinElite,AdapterRobinDead);
 }
 
