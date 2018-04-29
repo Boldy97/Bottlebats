@@ -18,8 +18,9 @@ This is a collection of bots for the Battlebots project of [MOZAIC](https://gith
 ### Boldy97 (Robin)
 
 1. Install node
-2. Add a bot using `node {path}/Boldy97/run.js {Bot}` where `{path}` is the path of the git repository and `{Bot}` is one of the following (or empty in which case the last option is chosen):
-   * BotSimple
+2. Run `npm install` inside the Boldy97 directory
+3. Add a bot using `node {path}/Boldy97/run.js {Bot}` where `{path}` is the path of the git repository and `{Bot}` is one of the following (or empty in which case the last option is chosen):
+   * BotEasy
    * BotMedium
    * BotHard
    * BotElite
