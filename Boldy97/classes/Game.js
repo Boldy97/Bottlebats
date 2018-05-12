@@ -12,17 +12,18 @@ const BotElite = require('../bots/BotElite');
 
 
 function start(){
-	playOne(500,AdapterRobinElite,AdapterGoogleIkhramts);
+	//playOne(100,AdapterRobinElite,AdapterIkhramts);
+	//playOne(500,AdapterRobinElite,AdapterBiggusBottus);
 	//playOne(500,AdapterRobinMedium,AdapterRobinEasy);
-	//playOne(500,new AdapterRobin(BotElite),new AdapterGoogleDefault(1));
+	//playOne(500,new AdapterRobin(BotElite),new AdapterGoogleGoogle(1));
 	//playOne(500,new AdapterRobin(BotMedium),new AdapterRobin(BotEasy));
-	//playAllLarge(500,AdapterRobinElite,AdapterGoogleIkhramts);
-	//playAllLarge(500,AdapterRobinElite,AdapterRobinDead);
+	//playAllLarge(500,AdapterRobinElite,AdapterIkhramts);
+	playOne(500,AdapterRobinElite,AdapterRobinEasy);
 }
 
 function playOne(turnlimit,bot1,bot2){
 	let game = new Game(1,0,turnlimit,true,
-		Game.mapLarge,
+		Game.mapHungerGames,
 		//Game.mapSquare.bind(null,6,3),
 		undefined,//[11,12],
 		bot1,bot2,
@@ -183,6 +184,7 @@ class AdapterRobinElite extends AdapterRobin {
 	constructor(ownername,neutralname){super(ownername,neutralname,BotElite);}
 }
 
+
 class AdapterQuinten extends Adapter {
 
 	static getName(){
@@ -211,7 +213,7 @@ class AdapterGoogle extends Adapter {
 			//console.log('Bot errored: '+data);
 		});
 		this.bot.on('close',(code)=>{
-			//console.log('Bot closed with code: '+code);
+			console.log('Bot closed with code: '+code);
 		});
 		this.distances = null;
 		this.planetnames = null;
@@ -286,22 +288,46 @@ class AdapterGoogle extends Adapter {
 
 }
 
+class AdapterBiggusBottus extends AdapterGoogle {
+	
+	static getName(){
+		return 'BiggusBottus';
+	}
 
-class AdapterGoogleDefault extends AdapterGoogle {
+	constructor(ownername,neutralname){
+		super(ownername,neutralname,'python ./bots/external/biggusbottus/MinOoBiggusBottus.py');
+	}
+
+	processData(data){
+		this.done = false;
+		console.log('Sending stuff');
+		console.log(JSON.stringify(data));
+		this.bot.stdin.write(JSON.stringify(data));
+	}
+
+	recieveData(data){
+		console.log('got stuff');
+		console.log(JSON.stringify(data));
+		//this.done = true;
+		// TODO this.submitMoves(); ?
+	}
+}
+
+class AdapterGoogleGoogle extends AdapterGoogle {
 	constructor(ownername,neutralname,index){
 		let googlebots = ['Bully','Dual','Prospector','Rage','Random'];
-		super(ownername,neutralname,'java -jar ./bots/google/google/'+googlebots[index]+'Bot.jar');
+		super(ownername,neutralname,'java -jar ./bots/external/google/'+googlebots[index]+'Bot.jar');
 	}
 	static getName(){return 'Google';}
 }
 
-class AdapterGoogleMrcarlosrendon extends AdapterGoogle {
-	constructor(ownername,neutralname){super(ownername,neutralname,'python ./bots/google/mrcarlosrendon/MyBot.py');}
+class AdapterMrcarlosrendon extends AdapterGoogle {
+	constructor(ownername,neutralname){super(ownername,neutralname,'python ./bots/external/mrcarlosrendon/MyBot.py');}
 	static getName(){return 'mrcarlosrendon';}
 }
 
-class AdapterGoogleIkhramts extends AdapterGoogle {
-	constructor(ownername,neutralname){super(ownername,neutralname,'./bots/google/ikhramts/MyBot.exe');}
+class AdapterIkhramts extends AdapterGoogle {
+	constructor(ownername,neutralname){super(ownername,neutralname,'./bots/external/ikhramts/MyBot.exe');}
 	static getName(){return 'ikhramts';}
 }
 
@@ -336,28 +362,6 @@ class Game {
 		this.processMoves([]);
 	}
 
-	static mapLarge(){
-		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\games\\large.json').toString().split('\n')[0]);
-		result.spots = [];
-		result.planets.forEach((planet,i) => {
-			planet.ship_count = 5;
-			result.spots.push(i);
-		});
-		Utils.shuffle(result.spots);
-		return result;
-	}
-
-	static mapHex(){
-		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\games\\hex.json').toString().split('\n')[0]);
-		result.spots = [];
-		result.planets.forEach((planet,i) => {
-			planet.ship_count = 5;
-			result.spots.push(i);
-		});
-		Utils.shuffle(result.spots);
-		return result;
-	}
-
 	static mapSquare(dim,dist){
 		let result = {planets:[],spots:[0,dim*dim-1,dim-1,dim*(dim-1)]};
 		for(let i=0;i<dim;i++)
@@ -368,6 +372,67 @@ class Game {
 					y:j*dist,
 					ship_count:5,
 				});
+		return result;
+	}
+
+	static mapHex(){
+		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\maps\\hex.json').toString());
+		result.spots = [];
+		result.planets.forEach((planet,i) => {
+			if(planet.owner)
+				result.spots[planet.owner-1] = i;
+		});
+		return result;
+	}
+
+	static mapHungerGames(){
+		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\maps\\hungergames.json').toString());
+		result.spots = [];
+		result.planets.forEach((planet,i) => {
+			if(planet.owner)
+				result.spots[planet.owner-1] = i;
+		});
+		return result;
+	}
+
+	static mapLarge(){
+		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\maps\\large.json').toString());
+		result.spots = [];
+		result.planets.forEach((planet,i) => {
+			planet.ship_count = 5;
+			result.spots.push(i);
+		});
+		Utils.shuffle(result.spots);
+		return result;
+	}
+
+	static mapSpiral(){
+		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\maps\\spiral.json').toString());
+		result.spots = [];
+		result.planets.forEach((planet,i) => {
+			if(planet.owner)
+				result.spots[planet.owner-1] = i;
+		});
+		return result;
+	}
+
+	static mapSpiral2(){
+		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\maps\\spiral2.json').toString());
+		result.spots = [];
+		result.planets.forEach((planet,i) => {
+			if(planet.owner)
+				result.spots[planet.owner-1] = i;
+		});
+		return result;
+	}
+
+	static mapUndecidable(){
+		let result = JSON.parse(fs.readFileSync(__dirname+'\\..\\maps\\undecidable.json').toString());
+		result.spots = [];
+		result.planets.forEach((planet,i) => {
+			if(planet.owner)
+				result.spots[planet.owner-1] = i;
+		});
 		return result;
 	}
 

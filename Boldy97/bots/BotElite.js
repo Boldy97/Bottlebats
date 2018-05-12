@@ -57,7 +57,7 @@ module.exports = class BotElite extends Bot {
 				let hostilefertility = hostile.planets.reduce((fertility,planet) => {
 					return fertility+planet.getValue(MessageFertility);
 				},0);
-				if(hostilefertility > fertility){
+				if(hostilefertility >= fertility){
 					addPreferredStartPlanet = true;
 					break;
 				}
