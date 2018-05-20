@@ -12,58 +12,88 @@ module.exports = class StateRouted extends State {
 
 	constructor(ownername,neutralname){
 		super(Player,PlanetRouted,Move,Future,LinkRouted,ownername,neutralname);
+		this.basicRoutingMade = false;
 		this.routingMade = false;
-		// TODO stop when going above 500ms (to be safe)
-		// TODO add extra variables to save progress
+		this.k0 = 0;
+		this.dist = null;
+		this.via = null;
 	}
 
 	processTurn(){
 		super.processTurn();
+		if(!this.basicRoutingMade)
+			this.makeBasicRouting();
 		if(!this.routingMade)
 			this.makeRouting();
 	}
 
+	makeBasicRouting(){
+		for(let planet of this.planets)
+			for(let link of planet.links)
+				planet.addRoute(link.to,link.to,link.turns);
+		this.basicRoutingMade = true;
+	}
+
 	makeRouting(){
 		let N = this.planets.length;
-		let dist = [];
-		let via = [];
+
+		// pre-work
+		if(!this.dist){
+			this.dist = [];
+			this.via = [];
+
+			// O(N)
+			for(let i=0;i<N;i++){
+				this.dist[i] = [];
+				this.via[i] = [];
+				this.dist[i][i] = 0;
+			}
+
+			// O(N²)
+			for(let i=0;i<N;i++)
+				for(let j=0;j<i;j++){
+					this.dist[i][j] = this.dist[j][i] = this.planets[i].getLink(this.planets[j]).distance;
+					this.via[i][j] = j;
+					this.via[j][i] = i;
+				}
+		}
+
+		let start = Date.now();
+
+		// O(N³)
+		for(let k=this.k0;k<N;k++){
+			if(Date.now()-start > 500){
+				// calculating too long!
+				this.k0 = k;
+				return;
+			}
+			for(let i=0;i<N;i++)
+				for(let j=0;j<N;j++)
+					if(this.dist[i][j] > this.dist[i][k] + this.dist[k][j]){
+						this.dist[i][j] = this.dist[i][k] + this.dist[k][j];
+						this.via[i][j] = this.via[i][k];
+					}
+		}
+
+		// finished
 
 		for(let i=0;i<N;i++){
-			dist[i] = [];
-			via[i] = [];
-			dist[i][i] = 0;
+			this.planets[i].links.length = 0;
+			this.planets[i].routes.length = 0;
 		}
 
 		for(let i=0;i<N;i++)
-			for(let j=0;j<i;j++){
-				dist[i][j] = dist[j][i] = this.planets[i].getLink(this.planets[j]).distance;
-				via[i][j] = j;
-				via[j][i] = i;
-			}
-
-		for(let k=0;k<N;k++)
-			for(let i=0;i<N;i++)
-				for(let j=0;j<N;j++)
-					if(dist[i][j] > dist[i][k] + dist[k][j]){
-						dist[i][j] = dist[i][k] + dist[k][j];
-						via[i][j] = via[i][k];
-					}
-
-		for(let i=0;i<N;i++)
-			this.planets[i].links.length = 0;
-
-		for(let i=0;i<N;i++)
 			for(let j=0;j<i;j++)
-				if(via[i][j] === j)
-					this.planets[i].addLink(this.planets[j],Math.sqrt(dist[i][j]));
+				if(this.via[i][j] === j)
+					this.planets[i].addLink(this.planets[j],Math.sqrt(this.dist[i][j]));
 
 		for(let i=0;i<N;i++)
 			for(let j=0;j<N;j++)
 				if(i !== j)
 					this.planets[i].addRoute(
 						this.planets[j],
-						this.planets[via[i][j]],
-						this.planets[i].getLink(this.planets[via[i][j]]).turns
+						this.planets[this.via[i][j]],
+						this.planets[i].getLink(this.planets[this.via[i][j]]).turns
 					);
 
 		this.routingMade = true;

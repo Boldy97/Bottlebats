@@ -36,7 +36,6 @@ const readline = require('readline').createInterface({
 			console.log(JSON.stringify({
 				moves: bot.getMoves()
 			}));
-			//bot.getMoves();
 			//Timer.step();
 		}).bind(undefined,new BOTS[botname](1,null))
 	);

@@ -12,6 +12,7 @@ const MessageStatusGame = require('../classes/messages/MessageStatusGame');
 const MessageStatusScores = require('../classes/messages/MessageStatusScores');
 const MessageStatusWinning = require('../classes/messages/MessageStatusWinning');
 const Move = require('../classes/Move');
+//const Timer = require('../classes/Timer');
 const Utils = require('../classes/Utils');
 
 const MINMOVEPART = 1/2; // the minimum part of the ships to be moved each move
@@ -78,6 +79,7 @@ module.exports = class BotElite extends Bot {
 	}
 
 	getMoves(){
+		//Timer.start();
 		let moves = [];
 
 		if(!this.state.routingMade)
@@ -97,6 +99,7 @@ module.exports = class BotElite extends Bot {
 			this.moveForPlanet(moves,planet);
 		});
 
+		//Timer.stop();
 		return moves.map(move => move.toOutputMove());
 	}
 

@@ -24,7 +24,7 @@ function start(){
 function playOne(turnlimit,bot1,bot2){
 	let game = new Game(1,0,turnlimit,true,
 		Game.mapHungerGames,
-		//Game.mapSquare.bind(null,6,3),
+		//Game.mapSquare.bind(null,5,3),
 		undefined,//[11,12],
 		bot1,bot2,
 	);

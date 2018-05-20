@@ -12,18 +12,20 @@ module.exports = class Timer {
 		timer.count = 0;
 	}
 
-	static step(){
+	static step(silent){
 		let time = process.hrtime();
 		time = time[0]*1000000+time[1]/1000;
-		console.log('Timer step: '+Math.ceil(time-timer.step));
+		if(!silent)
+			console.log('Timer step: '+Math.ceil((time-timer.step)/1000)+'ms');
 		timer.step = time;
 		timer.count++;
 	}
 
 	static stop(){
+		this.step(true);
 		let time = process.hrtime();
 		time = time[0]*1000000+time[1]/1000;
-		console.log('Timer stop: average '+Math.ceil((time-timer.start)/timer.count)+' over '+timer.count+' steps');
+		console.log('Timer stop: average '+Math.ceil(((time-timer.start)/timer.count)/1000)+'ms over '+timer.count+' steps');
 	}
 
 }
