@@ -66,12 +66,12 @@ module.exports = class BotElite extends Bot {
 			// if changing, get best option
 			if(addPreferredStartPlanet){
 				let planet = this.state.planets.filter(planet => planet.player.type === Utils.TYPES.NEUTRAL).reduce((best,planet) => {
-					if(best === undefined)
+					if(best === null)
 						return planet;
 					if(planet.getValue(MessageFertility) > best.getValue(MessageFertility))
 						return planet;
 					return best;
-				});
+				},null);
 				this.preferredStartPlanet = planet;
 			}
 		}
