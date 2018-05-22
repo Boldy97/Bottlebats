@@ -138,7 +138,7 @@ module.exports = class State {
 
 		this.processTurn();
 
-		//if(!(new Error().stack.includes('BotDead'))) this.check(data);
+		if(!(new Error().stack.includes('BotDead'))) this.check(data);
 	}
 
 	check(data){ // TODO remove
@@ -157,10 +157,14 @@ module.exports = class State {
 			let planet2 = this.getPlanet(planet.name);
 			if(planet2 === undefined)
 				throw this.turn+' no planet '+planet.name;
-			if(planet.owner !== planet2.player.name)
-				throw `${this.turn} player mismatch @ ${planet2.name} is ${planet2.player.name} should be ${planet.owner}`;
-			if(planet.ship_count !== planet2.ships)
-				throw new Error(`${this.turn} ships mismatch @ ${planet2.name} is ${planet2.ships} should be ${planet.ship_count}`);
+			if(planet.owner !== planet2.player.name){
+				//throw `${this.turn} player mismatch @ ${planet2.name} is ${planet2.player.name} should be ${planet.owner}`;
+				planet2.setPlayer(this.getPlayer(planet.owner));
+			}
+			if(planet.ship_count !== planet2.ships){
+				//throw new Error(`${this.turn} ships mismatch @ ${planet2.name} is ${planet2.ships} should be ${planet.ship_count}`);
+				planet2.setShips(planet.ship_count);
+			}
 		}
 	}
 
