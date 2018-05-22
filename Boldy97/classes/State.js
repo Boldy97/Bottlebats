@@ -138,7 +138,7 @@ module.exports = class State {
 
 		this.processTurn();
 
-		if(!(new Error().stack.includes('BotDead'))) this.check(data);
+		//if(!(new Error().stack.includes('BotDead'))) this.check(data);
 	}
 
 	check(data){ // TODO remove

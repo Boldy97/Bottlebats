@@ -1,73 +1,73 @@
 {
     "planets": [
         {
-            "name": "guns",
+            "name": "guns1",
             "x": -1,
             "y": -1,
             "ship_count": 0
         },
         {
-            "name": "guns",
+            "name": "guns2",
             "x": -2,
             "y": -1,
             "ship_count": 0
         },
         {
-            "name": "guns",
+            "name": "guns3",
             "x": -1,
             "y": -2,
             "ship_count": 0
         },
         {
-            "name": "food",
+            "name": "food1",
             "x": 1,
             "y": -1,
             "ship_count": 0
         },
         {
-            "name": "food",
+            "name": "food2",
             "x": 2,
             "y": -1,
             "ship_count": 0
         },
         {
-            "name": "food",
+            "name": "food3",
             "x": 1,
             "y": -2,
             "ship_count": 0
         },
         {
-            "name": "swords",
+            "name": "swords1",
             "x": -1,
             "y": 1,
             "ship_count": 0
         },
         {
-            "name": "swords",
+            "name": "swords2",
             "x": -2,
             "y": 1,
             "ship_count": 0
         },
         {
-            "name": "swords",
+            "name": "swords3",
             "x": -1,
             "y": 2,
             "ship_count": 0
         },
         {
-            "name": "explosives",
+            "name": "explosives1",
             "x": 1,
             "y": 1,
             "ship_count": 0
         },
         {
-            "name": "explosives",
+            "name": "explosives2",
             "x": 2,
             "y": 1,
             "ship_count": 0
         },
         {
-            "name": "explosives",
+            "name": "explosives3",
             "x": 1,
             "y": 2,
             "ship_count": 0
